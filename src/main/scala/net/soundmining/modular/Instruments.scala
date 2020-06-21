@@ -1,10 +1,10 @@
-package net.soundmining
+package net.soundmining.modular
 
 
 import java.{lang => jl}
 
 import net.soundmining.Instrument.{EnvCurve, buildFloat, buildInteger}
-import net.soundmining.ModularInstrument.{AudioBus, AudioInstrument, ControlInstrument, ModularInstrument, StaticAudioBusInstrument}
+import net.soundmining.modular.ModularInstrument.{AudioBus, AudioInstrument, ControlInstrument, ModularInstrument, StaticAudioBusInstrument}
 
 object Instruments {
 

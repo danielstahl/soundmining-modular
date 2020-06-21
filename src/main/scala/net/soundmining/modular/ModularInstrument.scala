@@ -1,8 +1,9 @@
-package net.soundmining
+package net.soundmining.modular
 
 import java.util.UUID
 
 import net.soundmining.Instrument._
+import net.soundmining.BusAllocator
 import java.{lang => jl}
 
 /**
