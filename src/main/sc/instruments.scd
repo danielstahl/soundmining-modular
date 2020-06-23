@@ -14,6 +14,7 @@ s.dumpOSC(1);
 )
 
 (
+
 SynthDef(\staticControl, {
 	arg dur = 1, value = 1, out = 0;
 	var lineEnv;
@@ -145,33 +146,36 @@ SynthDef(\xfade, {
 }).add;
 
 SynthDef(\left, {
-	arg dur = 1, in = 0, out = 0;
-	var input;
+	arg dur = 1, in = 0, out = 0, ampBus = 0;
+	var input, amp;
 
 	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
 	input = In.ar(in, 2);
 
-	Out.ar(out, input[0]);
+	Out.ar(out, input[0] * amp);
 }).add;
 
 SynthDef(\right, {
-	arg dur = 1, in = 0, out = 0;
-	var input;
+	arg dur = 1, in = 0, out = 0, ampBus = 0;
+	var input, amp;
 
 	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
 	input = In.ar(in, 2);
 
-	Out.ar(out, input[1]);
+	Out.ar(out, input[1] * amp);
 }).add;
 
 SynthDef(\mix, {
-	arg dur = 1, in1 = 0, in2 = 0, out = 0;
-	var sig1, sig2, result;
+	arg dur = 1, in1 = 0, in2 = 0, out = 0, ampBus = 0;
+	var sig1, sig2, result, amp;
 	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
 	sig1 = In.ar(in1, 1);
 	sig2 = In.ar(in2, 1);
 	result = Mix.new([sig1, sig2]);
-	Out.ar(out, result);
+	Out.ar(out, result * amp);
 }).add;
 
 SynthDef(\expand, {
@@ -322,7 +326,7 @@ SynthDef(\fmTriangleModulate, {
 
 SynthDef(\pmSineOsc, {
 	arg dur = 1, freqBus = 0, modBus = 0, ampBus = 0, out = 0;
-	var sig, amp, freq, mod, conversion= 2pi/(s.sampleRate);
+	var sig, amp, freq, mod, conversion = 2pi/(s.sampleRate);
 	Line.kr(dur:dur, doneAction:2);
 	amp = In.kr(ampBus, 1);
 	freq = In.kr(freqBus, 1);
@@ -332,7 +336,8 @@ SynthDef(\pmSineOsc, {
 	Out.ar(out, sig);
 }).add;
 
-SynthDef(\pan, {arg dur = 1, panBus = 0, in = 0, out = 0;
+SynthDef(\pan, {
+	arg dur = 1, panBus = 0, in = 0, out = 0;
 	var pan, input;
 	Line.kr(dur:dur, doneAction:2);
 	pan = In.kr(panBus, 1);
@@ -380,18 +385,19 @@ SynthDef(\reverb, {
 }).add;
 
 SynthDef(\playBuffer, {
-	arg bufNum, rate = 1, start = 0, end = 0, out = 0;
-	var totalDur, startFrame, endFrame;
+	arg bufNum, rate = 1, start = 0, end = 0, out = 0, ampBus = 0;
+	var totalDur, startFrame, endFrame, amp;
 
 	totalDur = ((end - start) / rate).abs;
 
 	startFrame = (start / BufDur.kr(bufNum)) * BufFrames.kr(bufNum);
 	endFrame = (end / BufDur.kr(bufNum)) * BufFrames.kr(bufNum);
 	Line.kr(dur:totalDur, doneAction:2);
+	amp = In.kr(ampBus, 1);
 
 	Out.ar(out,
 		BufRd.ar(2, bufNum,
-			Line.ar(startFrame, endFrame, totalDur, doneAction:2)));
+			Line.ar(startFrame, endFrame, totalDur, doneAction:2)) * amp);
 }).add;
 
 "Added Instruments".postln;

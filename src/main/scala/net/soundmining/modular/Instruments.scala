@@ -50,14 +50,14 @@ object Instruments {
   def xfade(in1Bus: AudioInstrument, in2Bus: AudioInstrument, xfadeBus: ControlInstrument): XFade =
     new XFade().xfade(in1Bus: AudioInstrument, in2Bus: AudioInstrument, xfadeBus: ControlInstrument)
 
-  def left(inBus: AudioInstrument): Left =
-    new Left().oneChannel(inBus)
+  def left(inBus: AudioInstrument, ampBus: ControlInstrument): Left =
+    new Left().oneChannel(inBus, ampBus)
 
-  def right(inBus: AudioInstrument): Right =
-    new Right().oneChannel(inBus)
+  def right(inBus: AudioInstrument, ampBus: ControlInstrument): Right =
+    new Right().oneChannel(inBus, ampBus)
 
-  def mix(in1Bus: AudioInstrument, in2Bus: AudioInstrument): Mix =
-    new Mix().mix(in1Bus: AudioInstrument, in2Bus: AudioInstrument)
+  def mix(in1Bus: AudioInstrument, in2Bus: AudioInstrument, ampBus: ControlInstrument): Mix =
+    new Mix().mix(in1Bus: AudioInstrument, in2Bus: AudioInstrument, ampBus)
 
   def expand(leftInBus: AudioInstrument, rightInBus: AudioInstrument): Expand = 
     new Expand().expand(leftInBus, rightInBus)
@@ -117,8 +117,8 @@ object Instruments {
                     ampBus: ControlInstrument): FmTriangleModulate =
     new FmTriangleModulate().modulate(carrierFreqBus, modulatorBus, ampBus)
 
- def playBuffer(bufNum: Integer, rate: Float, start: Float, end: Float): PlayBuffer =
-    new PlayBuffer().playBuffer(bufNum, rate, start, end)
+ def playBuffer(bufNum: Integer, rate: Float, start: Float, end: Float, ampBus: ControlInstrument): PlayBuffer =
+    new PlayBuffer().playBuffer(bufNum, rate, start, end, ampBus)
 
   class PercControl extends ControlInstrument {
     type SelfType = PercControl
@@ -469,7 +469,7 @@ object Instruments {
       val durationFallback: jl.Float = buildFloat(duration)
 
       Seq("in", buildInteger(
-        getInputBus(startTime, durationFallback)),
+          getInputBus(startTime, durationFallback)),
         "predelay", predelay,
         "wet", wet,
         "combdelay", combdelay,
@@ -519,14 +519,16 @@ object Instruments {
 
   abstract class OneChannel extends AudioInstrument {
     var inBus: AudioInstrument = _
+    var ampBus: ControlInstrument = _
 
-    def oneChannel(inBus: AudioInstrument): SelfType = {
+    def oneChannel(inBus: AudioInstrument, ampBus: ControlInstrument): SelfType = {
       this.inBus = inBus
+      this.ampBus = ampBus
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
-      appendToGraph(inBus.graph(parent))
+      appendToGraph(ampBus.graph(inBus.graph(parent)))
 
     override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
       val durationFallback: jl.Float = buildFloat(duration)
@@ -534,7 +536,9 @@ object Instruments {
       Seq(
         "in", buildInteger(
           inBus.getOutputBus.dynamicBus(startTime,
-            startTime + inBus.optionalDur.getOrElse(duration))))
+            startTime + inBus.optionalDur.getOrElse(duration))),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+            startTime + ampBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -559,15 +563,17 @@ object Instruments {
 
     var in1Bus: AudioInstrument = _
     var in2Bus: AudioInstrument = _
+    var ampBus: ControlInstrument = _
 
-    def mix(in1Bus: AudioInstrument, in2Bus: AudioInstrument): SelfType = {
+    def mix(in1Bus: AudioInstrument, in2Bus: AudioInstrument, ampBus: ControlInstrument): SelfType = {
       this.in1Bus = in1Bus
-      this.in2Bus= in2Bus
+      this.in2Bus = in2Bus
+      this.ampBus = ampBus
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
-      appendToGraph(in1Bus.graph(in2Bus.graph(parent)))
+      appendToGraph(ampBus.graph(in1Bus.graph(in2Bus.graph(parent))))
 
     override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
       val durationFallback: jl.Float = buildFloat(duration)
@@ -578,7 +584,9 @@ object Instruments {
             startTime + in1Bus.optionalDur.getOrElse(duration))),
         "in2", buildInteger(
           in2Bus.getOutputBus.dynamicBus(startTime,
-            startTime + in2Bus.optionalDur.getOrElse(duration))))
+            startTime + in2Bus.optionalDur.getOrElse(duration))),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+            startTime + ampBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -591,7 +599,7 @@ object Instruments {
 
     var leftInBus: AudioInstrument = _
     var rightInBus: AudioInstrument = _
-
+    
     def expand(leftInBus: AudioInstrument, rightInBus: AudioInstrument): SelfType = {
       this.leftInBus = leftInBus
       this.rightInBus= rightInBus
@@ -1084,24 +1092,28 @@ object Instruments {
       var rate: jl.Float = _
       var start: jl.Float = _
       var end: jl.Float = _
+      var ampBus: ControlInstrument = _
 
-      def playBuffer(bufNum: Integer, rate: Float, start: Float, end: Float): SelfType = {
+      def playBuffer(bufNum: Integer, rate: Float, start: Float, end: Float, ampBus: ControlInstrument): SelfType = {
           this.bufNum = buildInteger(bufNum)
           this.rate = buildFloat(rate)
           this.start = buildFloat(start)
           this.end = buildFloat(end)
+          this.ampBus = ampBus
           self()
       }
 
       override def graph(parent: Seq[ModularInstrument.ModularInstrument]): Seq[ModularInstrument.ModularInstrument] = 
-        appendToGraph(parent)
+        appendToGraph(ampBus.graph(parent))
 
       override def internalBuild(startTime: Float, duration: Float): Seq[Object] =  
         Seq(
             "bufNum", bufNum,
             "rate", rate,
             "start", start,
-            "end", end
+            "end", end,
+            "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+              startTime + ampBus.optionalDur.getOrElse(duration))
         )  
   }
 }
