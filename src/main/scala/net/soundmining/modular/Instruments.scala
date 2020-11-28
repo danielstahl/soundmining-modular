@@ -23,6 +23,9 @@ object Instruments {
   def threeBlockcontrol(startValue1: Float, len1: Float, startValue2: Float, len2: Float, startValue3: Float, len3: Float, endValue3: Float, curve: Either[Float, EnvCurve]): ThreeBlockControl =
     new ThreeBlockControl().control(startValue1, len1, startValue2, len2, startValue3, len3, endValue3, curve)
 
+  def relativeThreeBlockcontrol(startValue1: Float, len1: Float, startValue2: Float, startValue3: Float, len3: Float, endValue3: Float, curve: Either[Float, EnvCurve]): RelativeThreeBlockControl =
+    new RelativeThreeBlockControl().control(startValue1, len1, startValue2, startValue3, len3, endValue3, curve)
+
   def lineControl(startValue: Float, endValue: Float): LineControl =
     new LineControl().control(startValue, endValue)
 
@@ -212,6 +215,49 @@ object Instruments {
         })
   }
 
+  class RelativeThreeBlockControl extends ControlInstrument {
+    type SelfType = RelativeThreeBlockControl
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "threeBlockControl"
+
+    var startValue1: jl.Float = _
+    var len1: jl.Float = _
+    var startValue2: jl.Float = _
+    var startValue3: jl.Float = _
+    var len3: jl.Float = _
+    var endValue3: jl.Float = _
+    var curveValue: Either[jl.Float, EnvCurve] = Left(-4f)
+
+    def control(startValue1: Float, len1: Float, startValue2: Float, startValue3: Float, len3: Float, endValue3: Float, curve: Either[Float, EnvCurve]): SelfType = {
+      this.startValue1 = buildFloat(startValue1)
+      this.len1 = buildFloat(len1)
+      this.startValue2 = buildFloat(startValue2)
+      this.startValue3 = buildFloat(startValue3)
+      this.len3 = buildFloat(len3)
+      this.endValue3 = buildFloat(endValue3)
+      this.curveValue = curve.left.map(buildFloat)
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      prependToGraph(parent)
+
+    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+      Seq(
+        "startValue1", startValue1,
+        "len1", buildFloat(len1 * duration),
+        "startValue2", startValue2,
+        "len2", buildFloat((1 - len1 - len3) * duration),
+        "startValue3", startValue3,
+        "len3", buildFloat(len3 * duration),
+        "endValue3", endValue3,
+        "curve", curveValue match {
+          case Left(floatValue) => floatValue
+          case Right(constant) => constant.name
+        })
+  }
 
   class LineControl extends ControlInstrument {
     type SelfType = LineControl
