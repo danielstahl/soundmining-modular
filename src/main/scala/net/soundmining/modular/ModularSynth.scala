@@ -1,38 +1,35 @@
 package net.soundmining.modular
 
+import ModularInstrument._
+import net.soundmining.synth.Instrument._
 
-import java.{lang => jl}
-
-import net.soundmining.Instrument.{EnvCurve, buildFloat, buildInteger}
-import net.soundmining.modular.ModularInstrument.{AudioBus, AudioInstrument, ControlInstrument, ModularInstrument, StaticAudioBusInstrument}
-
-object Instruments {
-
+object ModularSynth {
+  
   def staticAudioBus(): StaticAudioBusInstrument =
     new StaticAudioBusInstrument()
 
-  def staticControl(value: Float): StaticControl =
+  def staticControl(value: Double): StaticControl =
     new StaticControl().control(value)
 
-  def percControl(startValue: Float, peakValue: Float, attackTime: Float, curve: Either[Float, EnvCurve]): PercControl =
+  def percControl(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Double, EnvCurve]): PercControl =
     new PercControl().control(startValue, peakValue, attackTime, curve)
 
-  def relativePercControl(startValue: Float, peakValue: Float, attackTime: Float, curve: Either[Float, EnvCurve]): PercControl =
+  def relativePercControl(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Double, EnvCurve]): PercControl =
     new RelativePercControl().control(startValue, peakValue, attackTime, curve)
 
-  def threeBlockcontrol(startValue1: Float, len1: Float, startValue2: Float, len2: Float, startValue3: Float, len3: Float, endValue3: Float, curve: Either[Float, EnvCurve]): ThreeBlockControl =
+  def threeBlockcontrol(startValue1: Double, len1: Double, startValue2: Double, len2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Double, EnvCurve]): ThreeBlockControl =
     new ThreeBlockControl().control(startValue1, len1, startValue2, len2, startValue3, len3, endValue3, curve)
 
-  def relativeThreeBlockcontrol(startValue1: Float, len1: Float, startValue2: Float, startValue3: Float, len3: Float, endValue3: Float, curve: Either[Float, EnvCurve]): RelativeThreeBlockControl =
+  def relativeThreeBlockcontrol(startValue1: Double, len1: Double, startValue2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Double, EnvCurve]): RelativeThreeBlockControl =
     new RelativeThreeBlockControl().control(startValue1, len1, startValue2, startValue3, len3, endValue3, curve)
 
-  def lineControl(startValue: Float, endValue: Float): LineControl =
+  def lineControl(startValue: Double, endValue: Double): LineControl =
     new LineControl().control(startValue, endValue)
 
-  def xlineControl(startValue: Float, endValue: Float): XLineControl =
+  def xlineControl(startValue: Double, endValue: Double): XLineControl =
     new XLineControl().control(startValue, endValue)
 
-  def sineControl(freqBus: ControlInstrument, minValue: Float, maxValue: Float): SineControl =
+  def sineControl(freqBus: ControlInstrument, minValue: Double, maxValue: Double): SineControl =
     new SineControl().control(freqBus, minValue, maxValue)
 
   def controlMix(in1Bus: ControlInstrument, in2Bus: ControlInstrument): ControlMix =
@@ -41,13 +38,13 @@ object Instruments {
   def panning(inBus: AudioInstrument, panBus: ControlInstrument): Panning =
     new Panning().pan(inBus, panBus)
 
-  def monoDelay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Float, decayTime: Float): MonoDelay =
+  def monoDelay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): MonoDelay =
     new MonoDelay().delay(inBus, ampBus, delayTime, decayTime)
 
-  def stereoDelay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Float, decayTime: Float): StereoDelay =
+  def stereoDelay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): StereoDelay =
     new StereoDelay().delay(inBus, ampBus, delayTime, decayTime)
 
-  def reverb(inBus: AudioInstrument, preDelay: Float, wet: Float, combDelay: Float, combDecay: Float, allpassDelay: Float, allpassDecay: Float): Reverb =
+  def reverb(inBus: AudioInstrument, preDelay: Double, wet: Double, combDelay: Double, combDecay: Double, allpassDelay: Double, allpassDecay: Double): Reverb =
     new Reverb().reverb(inBus, preDelay, wet, combDelay, combDecay, allpassDelay, allpassDecay)
 
   def xfade(in1Bus: AudioInstrument, in2Bus: AudioInstrument, xfadeBus: ControlInstrument): XFade =
@@ -120,7 +117,7 @@ object Instruments {
                     ampBus: ControlInstrument): FmTriangleModulate =
     new FmTriangleModulate().modulate(carrierFreqBus, modulatorBus, ampBus)
 
- def playBuffer(bufNum: Integer, rate: Float, start: Float, end: Float, ampBus: ControlInstrument): PlayBuffer =
+ def playBuffer(bufNum: Int, rate: Double, start: Double, end: Double, ampBus: ControlInstrument): PlayBuffer =
     new PlayBuffer().playBuffer(bufNum, rate, start, end, ampBus)
 
   class PercControl extends ControlInstrument {
@@ -130,23 +127,23 @@ object Instruments {
 
     val instrumentName: String = "percControl"
 
-    var attackTime: jl.Float = _
-    var curveValue: Either[jl.Float, EnvCurve] = Left(-4f)
-    var startValue: jl.Float = _
-    var peakValue: jl.Float = _
+    var attackTime: Double = _
+    var curveValue: Either[Double, EnvCurve] = Left(-4f)
+    var startValue: Double = _
+    var peakValue: Double = _
 
-    def control(startValue: Float, peakValue: Float, attackTime: Float, curve: Either[Float, EnvCurve]): SelfType = {
-      this.startValue = buildFloat(startValue)
-      this.peakValue = buildFloat(peakValue)
-      this.attackTime = buildFloat(attackTime)
-      this.curveValue = curve.left.map(buildFloat)
+    def control(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Double, EnvCurve]): SelfType = {
+      this.startValue = startValue
+      this.peakValue = peakValue
+      this.attackTime = attackTime
+      this.curveValue = curve
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       prependToGraph(parent)
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "startValue", startValue,
         "peakValue", peakValue,
@@ -158,11 +155,11 @@ object Instruments {
   }
 
   class RelativePercControl extends PercControl {
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "startValue", startValue,
         "peakValue", peakValue,
-        "attackTime", buildFloat(attackTime * duration),
+        "attackTime", attackTime * duration,
         "curve", curveValue match {
           case Left(floatValue) => floatValue
           case Right(constant) => constant.name
@@ -176,31 +173,31 @@ object Instruments {
 
     val instrumentName: String = "threeBlockControl"
 
-    var startValue1: jl.Float = _
-    var len1: jl.Float = _
-    var startValue2: jl.Float = _
-    var len2: jl.Float = _
-    var startValue3: jl.Float = _
-    var len3: jl.Float = _
-    var endValue3: jl.Float = _
-    var curveValue: Either[jl.Float, EnvCurve] = Left(-4f)
+    var startValue1: Double = _
+    var len1: Double = _
+    var startValue2: Double = _
+    var len2: Double = _
+    var startValue3: Double = _
+    var len3: Double = _
+    var endValue3: Double = _
+    var curveValue: Either[Double, EnvCurve] = Left(-4f)
 
-    def control(startValue1: Float, len1: Float, startValue2: Float, len2: Float, startValue3: Float, len3: Float, endValue3: Float, curve: Either[Float, EnvCurve]): SelfType = {
-      this.startValue1 = buildFloat(startValue1)
-      this.len1 = buildFloat(len1)
-      this.startValue2 = buildFloat(startValue2)
-      this.len2 = buildFloat(len2)
-      this.startValue3 = buildFloat(startValue3)
-      this.len3 = buildFloat(len3)
-      this.endValue3 = buildFloat(endValue3)
-      this.curveValue = curve.left.map(buildFloat)
+    def control(startValue1: Double, len1: Double, startValue2: Double, len2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Double, EnvCurve]): SelfType = {
+      this.startValue1 = startValue1
+      this.len1 = len1
+      this.startValue2 = startValue2
+      this.len2 = len2
+      this.startValue3 = startValue3
+      this.len3 = len3
+      this.endValue3 = endValue3
+      this.curveValue = curve
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       prependToGraph(parent)
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "startValue1", startValue1,
         "len1", len1,
@@ -222,36 +219,36 @@ object Instruments {
 
     val instrumentName: String = "threeBlockControl"
 
-    var startValue1: jl.Float = _
-    var len1: jl.Float = _
-    var startValue2: jl.Float = _
-    var startValue3: jl.Float = _
-    var len3: jl.Float = _
-    var endValue3: jl.Float = _
-    var curveValue: Either[jl.Float, EnvCurve] = Left(-4f)
+    var startValue1: Double = _
+    var len1: Double = _
+    var startValue2: Double = _
+    var startValue3: Double = _
+    var len3: Double = _
+    var endValue3: Double = _
+    var curveValue: Either[Double, EnvCurve] = Left(-4f)
 
-    def control(startValue1: Float, len1: Float, startValue2: Float, startValue3: Float, len3: Float, endValue3: Float, curve: Either[Float, EnvCurve]): SelfType = {
-      this.startValue1 = buildFloat(startValue1)
-      this.len1 = buildFloat(len1)
-      this.startValue2 = buildFloat(startValue2)
-      this.startValue3 = buildFloat(startValue3)
-      this.len3 = buildFloat(len3)
-      this.endValue3 = buildFloat(endValue3)
-      this.curveValue = curve.left.map(buildFloat)
+    def control(startValue1: Double, len1: Double, startValue2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Double, EnvCurve]): SelfType = {
+      this.startValue1 = startValue1
+      this.len1 = len1
+      this.startValue2 = startValue2
+      this.startValue3 = startValue3
+      this.len3 = len3
+      this.endValue3 = endValue3
+      this.curveValue = curve
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       prependToGraph(parent)
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "startValue1", startValue1,
-        "len1", buildFloat(len1 * duration),
+        "len1", len1 * duration,
         "startValue2", startValue2,
-        "len2", buildFloat((1 - len1 - len3) * duration),
+        "len2", (1 - len1 - len3) * duration,
         "startValue3", startValue3,
-        "len3", buildFloat(len3 * duration),
+        "len3", len3 * duration,
         "endValue3", endValue3,
         "curve", curveValue match {
           case Left(floatValue) => floatValue
@@ -266,19 +263,19 @@ object Instruments {
 
     val instrumentName: String = "lineControl"
 
-    var startValue: jl.Float = _
-    var endValue: jl.Float = _
+    var startValue: Double = _
+    var endValue: Double = _
 
-    def control(startValue: Float, endValue: Float): SelfType = {
-      this.startValue = buildFloat(startValue)
-      this.endValue = buildFloat(endValue)
+    def control(startValue: Double, endValue: Double): SelfType = {
+      this.startValue = startValue
+      this.endValue = endValue
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       prependToGraph(parent)
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "startValue", startValue,
         "endValue", endValue)
@@ -291,19 +288,19 @@ object Instruments {
 
     val instrumentName: String = "xlineControl"
 
-    var startValue: jl.Float = _
-    var endValue: jl.Float = _
+    var startValue: Double = _
+    var endValue: Double = _
 
-    def control(startValue: Float, endValue: Float): SelfType = {
-      this.startValue = buildFloat(startValue)
-      this.endValue = buildFloat(endValue)
+    def control(startValue: Double, endValue: Double): SelfType = {
+      this.startValue = startValue
+      this.endValue = endValue
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       prependToGraph(parent)
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "startValue", startValue,
         "endValue", endValue)
@@ -316,17 +313,17 @@ object Instruments {
 
     val instrumentName: String = "staticControl"
 
-    var value: jl.Float = _
+    var value: Double = _
 
-    def control(value: Float): SelfType = {
-      this.value = buildFloat(value)
+    def control(value: Double): SelfType = {
+      this.value = value
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       prependToGraph(parent)
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq("value", value)
   }
 
@@ -338,22 +335,22 @@ object Instruments {
     val instrumentName: String = "sineControl"
 
     var freqBus: ControlInstrument = _
-    var minValue: jl.Float = _
-    var maxValue: jl.Float = _
+    var minValue: Double = _
+    var maxValue: Double = _
 
-    def control(freqBus: ControlInstrument, minValue: Float, maxValue: Float): SelfType = {
+    def control(freqBus: ControlInstrument, minValue: Double, maxValue: Double): SelfType = {
       this.freqBus = freqBus
-      this.minValue = buildFloat(minValue)
-      this.maxValue = buildFloat(maxValue)
+      this.minValue = minValue
+      this.maxValue = maxValue
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(freqBus.graph(parent))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
-        "freqBus", buildInteger(freqBus.getOutputBus.dynamicBus(startTime, startTime + freqBus.optionalDur.getOrElse(duration))),
+        "freqBus", freqBus.getOutputBus.dynamicBus(startTime, startTime + freqBus.optionalDur.getOrElse(duration)),
         "minValue", minValue,
         "maxValue", maxValue)
   }
@@ -377,16 +374,14 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(in1Bus.graph(in2Bus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "in1", buildInteger(
-          in1Bus.getOutputBus.dynamicBus(startTime,
-            startTime + in1Bus.optionalDur.getOrElse(duration))),
-        "in2", buildInteger(
-          in2Bus.getOutputBus.dynamicBus(startTime,
-            startTime + in2Bus.optionalDur.getOrElse(duration))))
+        "in1", in1Bus.getOutputBus.dynamicBus(startTime,
+            startTime + in1Bus.optionalDur.getOrElse(duration)),
+        "in2", in2Bus.getOutputBus.dynamicBus(startTime,
+            startTime + in2Bus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -409,47 +404,43 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(inBus.graph(panBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "in", buildInteger(
-          inBus.getOutputBus.dynamicBus(startTime,
-            startTime + inBus.optionalDur.getOrElse(duration))),
-        "panBus", buildInteger(
-          panBus.getOutputBus.dynamicBus(startTime,
-            startTime + panBus.optionalDur.getOrElse(duration))))
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+            startTime + inBus.optionalDur.getOrElse(duration)),
+        "panBus", panBus.getOutputBus.dynamicBus(startTime,
+            startTime + panBus.optionalDur.getOrElse(duration)))
     }
   }
 
   abstract class Delay extends AudioInstrument {
     var inBus: AudioInstrument = _
-    var delaytime: jl.Float = _
-    var decaytime: jl.Float = _
-    //val nrOfChannels: Int
+    var delaytime: Double = _
+    var decaytime: Double = _
     var ampBus: ControlInstrument = _
 
-    def delay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Float, decayTime: Float): SelfType = {
+    def delay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): SelfType = {
       this.inBus = inBus
       this.ampBus = ampBus
-      this.delaytime = buildFloat(delayTime)
-      this.decaytime = buildFloat(decayTime)
+      this.delaytime = delayTime
+      this.decaytime = decayTime
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(inBus.graph(parent)))
 
-    def getInputBus(startTime: Float, durationFallback: Float): Int =
+    def getInputBus(startTime: Double, durationFallback: Double): Int =
       this.inBus.getOutputBus.dynamicBus(startTime,
         startTime + inBus.optionalDur.getOrElse(durationFallback))
 
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
-      Seq("in", buildInteger(
-            getInputBus(startTime, durationFallback)),
+      Seq("in", getInputBus(startTime, durationFallback),
           "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
             startTime + ampBus.optionalDur.getOrElse(duration)),
           "delaytime", delaytime,
@@ -463,8 +454,6 @@ object Instruments {
     override def self(): SelfType = this
 
     override val instrumentName: String = "monoDelay"
-
-    //override val nrOfChannels = 1
   }
 
   class StereoDelay extends Delay {
@@ -473,8 +462,6 @@ object Instruments {
     override def self(): SelfType = this
 
     override val instrumentName: String = "stereoDelay"
-
-    //override val nrOfChannels = 2
   }
 
   class Reverb extends AudioInstrument {
@@ -485,37 +472,36 @@ object Instruments {
     override val instrumentName: String = "reverb"
 
     var inBus: AudioInstrument = _
-    var predelay: jl.Float = _
-    var wet: jl.Float = _
-    var combdelay: jl.Float = _
-    var combdecay: jl.Float = _
-    var allpassdelay: jl.Float = _
-    var allpassdecay: jl.Float = _
+    var predelay: Double = _
+    var wet: Double = _
+    var combdelay: Double = _
+    var combdecay: Double = _
+    var allpassdelay: Double = _
+    var allpassdecay: Double = _
 
-    def reverb(inBus: AudioInstrument, preDelay: Float, wet: Float, combDelay: Float, combDecay: Float, allpassDelay: Float, allpassDecay: Float): SelfType = {
+    def reverb(inBus: AudioInstrument, preDelay: Double, wet: Double, combDelay: Double, combDecay: Double, allpassDelay: Double, allpassDecay: Double): SelfType = {
       this.inBus = inBus
-      this.predelay = buildFloat(preDelay)
-      this.wet = buildFloat(wet)
-      this.combdelay = buildFloat(combDelay)
-      this.combdecay = buildFloat(combDecay)
-      this.allpassdelay = buildFloat(allpassDelay)
-      this.allpassdecay = buildFloat(allpassDecay)
+      this.predelay = preDelay
+      this.wet = wet
+      this.combdelay = combDelay
+      this.combdecay = combDecay
+      this.allpassdelay = allpassDelay
+      this.allpassdecay = allpassDecay
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(inBus.graph(parent))
 
-    def getInputBus(startTime: Float, durationFallback: Float): Int =
+    def getInputBus(startTime: Double, durationFallback: Double): Int =
       this.inBus.getOutputBus.dynamicBus(startTime,
         startTime + inBus.optionalDur.getOrElse(durationFallback),
         2)
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
-      Seq("in", buildInteger(
-          getInputBus(startTime, durationFallback)),
+      Seq("in", getInputBus(startTime, durationFallback),
         "predelay", predelay,
         "wet", wet,
         "combdelay", combdelay,
@@ -546,19 +532,16 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(in1Bus.graph(in2Bus.graph(xfadeBus.graph(parent))))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "in1", buildInteger(
-          in1Bus.getOutputBus.dynamicBus(startTime,
-            startTime + in1Bus.optionalDur.getOrElse(duration))),
-        "in2", buildInteger(
-          in2Bus.getOutputBus.dynamicBus(startTime,
-            startTime + in2Bus.optionalDur.getOrElse(duration))),
-        "xfadeBus", buildInteger(
-          xfadeBus.getOutputBus.dynamicBus(startTime,
-            startTime + xfadeBus.optionalDur.getOrElse(duration))))
+        "in1", in1Bus.getOutputBus.dynamicBus(startTime,
+            startTime + in1Bus.optionalDur.getOrElse(duration)),
+        "in2", in2Bus.getOutputBus.dynamicBus(startTime,
+            startTime + in2Bus.optionalDur.getOrElse(duration)),
+        "xfadeBus", xfadeBus.getOutputBus.dynamicBus(startTime,
+            startTime + xfadeBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -576,13 +559,12 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(inBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "in", buildInteger(
-          inBus.getOutputBus.dynamicBus(startTime,
-            startTime + inBus.optionalDur.getOrElse(duration))),
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+            startTime + inBus.optionalDur.getOrElse(duration)),
         "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
             startTime + ampBus.optionalDur.getOrElse(duration)))
     }
@@ -621,16 +603,15 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(in1Bus.graph(in2Bus.graph(parent))))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "in1", buildInteger(
-          in1Bus.getOutputBus.dynamicBus(startTime,
-            startTime + in1Bus.optionalDur.getOrElse(duration))),
-        "in2", buildInteger(
+        "in1", in1Bus.getOutputBus.dynamicBus(startTime,
+            startTime + in1Bus.optionalDur.getOrElse(duration)),
+        "in2", 
           in2Bus.getOutputBus.dynamicBus(startTime,
-            startTime + in2Bus.optionalDur.getOrElse(duration))),
+            startTime + in2Bus.optionalDur.getOrElse(duration)),
         "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
             startTime + ampBus.optionalDur.getOrElse(duration)))
     }
@@ -655,16 +636,14 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(leftInBus.graph(rightInBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "leftIn", buildInteger(
-          leftInBus.getOutputBus.dynamicBus(startTime,
-            startTime + leftInBus.optionalDur.getOrElse(duration))),
-        "rightIn", buildInteger(
-          rightInBus.getOutputBus.dynamicBus(startTime,
-            startTime + rightInBus.optionalDur.getOrElse(duration))))
+        "leftIn", leftInBus.getOutputBus.dynamicBus(startTime,
+            startTime + leftInBus.optionalDur.getOrElse(duration)),
+        "rightIn", rightInBus.getOutputBus.dynamicBus(startTime,
+            startTime + rightInBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -687,7 +666,7 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(freqBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
           startTime + freqBus.optionalDur.getOrElse(duration)),
@@ -714,7 +693,7 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(freqBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
           startTime + freqBus.optionalDur.getOrElse(duration)),
@@ -741,7 +720,7 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(freqBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
           startTime + freqBus.optionalDur.getOrElse(duration)),
@@ -768,7 +747,7 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(freqBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
           startTime + freqBus.optionalDur.getOrElse(duration)),
@@ -793,7 +772,7 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(parent))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
           startTime + ampBus.optionalDur.getOrElse(duration)))
@@ -818,7 +797,7 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(freqBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] =
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
       Seq(
         "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
           startTime + freqBus.optionalDur.getOrElse(duration)),
@@ -847,19 +826,16 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(inBus.graph(freqBus.graph(gainBus.graph(parent))))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Object] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "in", buildInteger(
-          inBus.getOutputBus.dynamicBus(startTime,
-            startTime + inBus.optionalDur.getOrElse(duration))),
-        "freqBus", buildInteger(
-          freqBus.getOutputBus.dynamicBus(startTime,
-            startTime + freqBus.optionalDur.getOrElse(duration))),
-        "gainBus", buildInteger(
-          gainBus.getOutputBus.dynamicBus(startTime,
-            startTime + gainBus.optionalDur.getOrElse(duration))))
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+            startTime + inBus.optionalDur.getOrElse(duration)),
+        "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
+            startTime + freqBus.optionalDur.getOrElse(duration)),
+        "gainBus", gainBus.getOutputBus.dynamicBus(startTime,
+            startTime + gainBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -884,19 +860,16 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(inBus.graph(freqBus.graph(decayBus.graph(parent))))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "in", buildInteger(
-          inBus.getOutputBus.dynamicBus(startTime,
-            startTime + inBus.optionalDur.getOrElse(duration))),
-        "freqBus", buildInteger(
-          freqBus.getOutputBus.dynamicBus(startTime,
-            startTime + freqBus.optionalDur.getOrElse(duration))),
-        "decayBus", buildInteger(
-          decayBus.getOutputBus.dynamicBus(startTime,
-            startTime + decayBus.optionalDur.getOrElse(duration))))
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+            startTime + inBus.optionalDur.getOrElse(duration)),
+        "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
+            startTime + freqBus.optionalDur.getOrElse(duration)),
+        "decayBus", decayBus.getOutputBus.dynamicBus(startTime,
+            startTime + decayBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -919,16 +892,14 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(inBus.graph(freqBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "in", buildInteger(
-          inBus.getOutputBus.dynamicBus(startTime,
-            startTime + inBus.optionalDur.getOrElse(duration))),
-        "freqBus", buildInteger(
-          freqBus.getOutputBus.dynamicBus(startTime,
-            startTime + freqBus.optionalDur.getOrElse(duration))))
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+            startTime + inBus.optionalDur.getOrElse(duration)),
+        "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
+            startTime + freqBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -951,16 +922,14 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(inBus.graph(freqBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Object] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "in", buildInteger(
-          inBus.getOutputBus.dynamicBus(startTime,
-            startTime + inBus.optionalDur.getOrElse(duration))),
-        "freqBus", buildInteger(
-          freqBus.getOutputBus.dynamicBus(startTime,
-            startTime + freqBus.optionalDur.getOrElse(duration))))
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+            startTime + inBus.optionalDur.getOrElse(duration)),
+        "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
+            startTime + freqBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -985,19 +954,16 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(inBus.graph(freqBus.graph(rqBus.graph(parent))))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "in", buildInteger(
-          inBus.getOutputBus.dynamicBus(startTime,
-            startTime + inBus.optionalDur.getOrElse(duration))),
-        "freqBus", buildInteger(
-          freqBus.getOutputBus.dynamicBus(startTime,
-            startTime + freqBus.optionalDur.getOrElse(duration))),
-        "rqBus", buildInteger(
-          rqBus.getOutputBus.dynamicBus(startTime,
-            startTime + rqBus.optionalDur.getOrElse(duration))))
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+            startTime + inBus.optionalDur.getOrElse(duration)),
+        "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
+            startTime + freqBus.optionalDur.getOrElse(duration)),
+        "rqBus", rqBus.getOutputBus.dynamicBus(startTime,
+            startTime + rqBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -1020,16 +986,14 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(carrierBus.graph(modulatorFreqBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "carrierBus", buildInteger(
-          carrierBus.getOutputBus.dynamicBus(startTime,
-            startTime + carrierBus.optionalDur.getOrElse(duration))),
-        "modulatorFreqBus", buildInteger(
-          modulatorFreqBus.getOutputBus.dynamicBus(startTime,
-            startTime + modulatorFreqBus.optionalDur.getOrElse(duration))))
+        "carrierBus", carrierBus.getOutputBus.dynamicBus(startTime,
+            startTime + carrierBus.optionalDur.getOrElse(duration)),
+        "modulatorFreqBus", modulatorFreqBus.getOutputBus.dynamicBus(startTime,
+            startTime + modulatorFreqBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -1052,16 +1016,14 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(carrierBus.graph(modulatorFreqBus.graph(parent)))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "carrierBus", buildInteger(
-          carrierBus.getOutputBus.dynamicBus(startTime,
-            startTime + carrierBus.optionalDur.getOrElse(duration))),
-        "modulatorFreqBus", buildInteger(
-          modulatorFreqBus.getOutputBus.dynamicBus(startTime,
-            startTime + modulatorFreqBus.optionalDur.getOrElse(duration))))
+        "carrierBus", carrierBus.getOutputBus.dynamicBus(startTime,
+            startTime + carrierBus.optionalDur.getOrElse(duration)),
+        "modulatorFreqBus", modulatorFreqBus.getOutputBus.dynamicBus(startTime,
+            startTime + modulatorFreqBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -1081,19 +1043,16 @@ object Instruments {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(carrierFreqBus.graph(modulatorBus.graph(ampBus.graph(parent))))
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = {
-      val durationFallback: jl.Float = buildFloat(duration)
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
 
       Seq(
-        "carrierFreqBus", buildInteger(
-          carrierFreqBus.getOutputBus.dynamicBus(startTime,
-            startTime + carrierFreqBus.optionalDur.getOrElse(duration))),
-        "modulatorBus", buildInteger(
-          modulatorBus.getOutputBus.dynamicBus(startTime,
-            startTime + modulatorBus.optionalDur.getOrElse(duration))),
-        "ampBus", buildInteger(
-          ampBus.getOutputBus.dynamicBus(startTime,
-            startTime + ampBus.optionalDur.getOrElse(duration))))
+        "carrierFreqBus", carrierFreqBus.getOutputBus.dynamicBus(startTime,
+            startTime + carrierFreqBus.optionalDur.getOrElse(duration)),
+        "modulatorBus", modulatorBus.getOutputBus.dynamicBus(startTime,
+            startTime + modulatorBus.optionalDur.getOrElse(duration)),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+            startTime + ampBus.optionalDur.getOrElse(duration)))
     }
   }
 
@@ -1134,17 +1093,17 @@ object Instruments {
       def self(): SelfType = this
       val instrumentName: String = "playBuffer"
     
-      var bufNum: jl.Integer = _
-      var rate: jl.Float = _
-      var start: jl.Float = _
-      var end: jl.Float = _
+      var bufNum: Int = _
+      var rate: Double = _
+      var start: Double = _
+      var end: Double = _
       var ampBus: ControlInstrument = _
 
-      def playBuffer(bufNum: Integer, rate: Float, start: Float, end: Float, ampBus: ControlInstrument): SelfType = {
-          this.bufNum = buildInteger(bufNum)
-          this.rate = buildFloat(rate)
-          this.start = buildFloat(start)
-          this.end = buildFloat(end)
+      def playBuffer(bufNum: Int, rate: Double, start: Double, end: Double, ampBus: ControlInstrument): SelfType = {
+          this.bufNum = bufNum
+          this.rate = rate
+          this.start = start
+          this.end = end
           this.ampBus = ampBus
           self()
       }
@@ -1152,7 +1111,7 @@ object Instruments {
       override def graph(parent: Seq[ModularInstrument.ModularInstrument]): Seq[ModularInstrument.ModularInstrument] = 
         appendToGraph(ampBus.graph(parent))
 
-      override def internalBuild(startTime: Float, duration: Float): Seq[Object] =  
+      override def internalBuild(startTime: Double, duration: Double): Seq[Any] =  
         Seq(
             "bufNum", bufNum,
             "rate", rate,
@@ -1163,4 +1122,3 @@ object Instruments {
         )  
   }
 }
-

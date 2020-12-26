@@ -1,0 +1,12 @@
+#! /bin/sh
+
+SUPERCOLLIDER_DIR="/Applications/SuperCollider/SuperCollider.app/Contents/Resources"
+UDP_PORT="57110"
+BIND_ADDRESS="127.0.0.1"
+DEVICE_NAME="\"Built-in Output\""
+BLOCK_SIZE="128"
+SAMPLE_RATE="96000"
+NUM_BUFFERS="2056"
+MEM_SIZE="1048576" # 2.pow(20)
+
+$SUPERCOLLIDER_DIR/scsynth -u $UDP_PORT -B $BIND_ADDRESS -H $DEVICE_NAME -z $BLOCK_SIZE -S $SAMPLE_RATE -b $NUM_BUFFERS -m $MEM_SIZE
