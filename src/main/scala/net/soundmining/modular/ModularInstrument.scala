@@ -1,10 +1,8 @@
 package net.soundmining.modular
 
+import net.soundmining.synth.Instrument._
+import net.soundmining.synth.BusAllocator
 import java.util.UUID
-
-import net.soundmining.Instrument._
-import net.soundmining.BusAllocator
-import java.{lang => jl}
 
 /**
   * A development of the Instrument that can  build a graph of
@@ -33,9 +31,9 @@ object ModularInstrument {
 
   trait Bus {
     def busAllocator: BusAllocator
-    var busValue: Option[Integer] = None
+    var busValue: Option[Int] = None
 
-    def dynamicBus(startTime: Float, endTime: Float, nrOfChannels: Int = 1): Integer = {
+    def dynamicBus(startTime: Double, endTime: Double, nrOfChannels: Int = 1): Integer = {
       if(busValue.isEmpty) {
         val allocatedBuses = busAllocator.allocate(nrOfChannels, startTime, endTime)
         this.busValue = Option(allocatedBuses.head)
@@ -43,7 +41,7 @@ object ModularInstrument {
       busValue.get
     }
 
-    def staticBus(busValue: Integer): Integer = {
+    def staticBus(busValue: Int): Int = {
       this.busValue = Option(busValue)
       this.busValue.get
     }
@@ -82,9 +80,9 @@ object ModularInstrument {
       self()
     }
 
-    var optionalDur: Option[Float] = None
+    var optionalDur: Option[Double] = None
 
-    def withDur(value: Float): SelfType = {
+    def withDur(value: Double): SelfType = {
       optionalDur = Option(value)
       self()
     }
@@ -133,24 +131,24 @@ object ModularInstrument {
     /**
       * Builds a flattened graph of instrument builders
       */
-    def buildGraph(startTime: Float, duration: Float, flatGraph: Seq[ModularInstrument]): Seq[Seq[Object]] =
+    def buildGraph(startTime: Double, duration: Double, flatGraph: Seq[ModularInstrument]): Seq[Seq[Any]] =
       flatGraph.map(instrument => instrument.build(startTime, duration))
         .filter(graph => graph.nonEmpty)
 
-    def internalBuild(startTime: Float, duration: Float): Seq[Object]
+    def internalBuild(startTime: Double, duration: Double): Seq[Any]
 
     var instrumentIsBuilt = false
     /**
       * Builds this instrument
       */
-    def build(startTime: Float, duration: Float): Seq[Object] = {
+    def build(startTime: Double, duration: Double): Seq[Any] = {
       if(!instrumentIsBuilt) {
-        val finalDuration = buildFloat(optionalDur.getOrElse(duration))
+        val finalDuration = optionalDur.getOrElse(duration)
 
         val graph = Seq(
           instrumentName,
           Integer.valueOf(-1), addAction.action, nodeId.nodeId,
-          "out", buildInteger(getOutputBus.dynamicBus(startTime, startTime + finalDuration, nrOfChannels)),
+          "out", getOutputBus.dynamicBus(startTime, startTime + finalDuration, nrOfChannels),
           "dur", finalDuration
         ) ++ internalBuild(startTime, duration)
         instrumentIsBuilt = true
@@ -196,6 +194,6 @@ object ModularInstrument {
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] = parent
 
-    override def internalBuild(startTime: Float, duration: Float): Seq[Object] = Seq.empty
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = Seq.empty
   }
 }
