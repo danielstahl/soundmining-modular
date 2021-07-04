@@ -35,6 +35,9 @@ object ModularSynth {
   def controlMix(in1Bus: ControlInstrument, in2Bus: ControlInstrument): ControlMix =
     new ControlMix().mix(in1Bus, in2Bus)
 
+  def soundAmplitudeControl(inBus: AudioInstrument, attackTime: Double, releaseTime: Double): SoundAmplitudeControl =
+    new SoundAmplitudeControl().control(inBus, attackTime, releaseTime)
+
   def panning(inBus: AudioInstrument, panBus: ControlInstrument): Panning =
     new Panning().pan(inBus, panBus)
 
@@ -117,8 +120,11 @@ object ModularSynth {
                     ampBus: ControlInstrument): FmTriangleModulate =
     new FmTriangleModulate().modulate(carrierFreqBus, modulatorBus, ampBus)
 
- def playBuffer(bufNum: Int, rate: Double, start: Double, end: Double, ampBus: ControlInstrument): PlayBuffer =
-    new PlayBuffer().playBuffer(bufNum, rate, start, end, ampBus)
+ def monoPlayBuffer(bufNum: Int, rate: Double, start: Double, end: Double, ampBus: ControlInstrument): PlayBuffer =
+    new MonoPlayBuffer().playBuffer(bufNum, rate, start, end, ampBus)
+
+  def stereoPlayBuffer(bufNum: Int, rate: Double, start: Double, end: Double, ampBus: ControlInstrument): PlayBuffer =
+    new StereoPlayBuffer().playBuffer(bufNum, rate, start, end, ampBus)
 
   class PercControl extends ControlInstrument {
     type SelfType = PercControl
@@ -382,6 +388,37 @@ object ModularSynth {
             startTime + in1Bus.optionalDur.getOrElse(duration)),
         "in2", in2Bus.getOutputBus.dynamicBus(startTime,
             startTime + in2Bus.optionalDur.getOrElse(duration)))
+    }
+  }
+
+  class SoundAmplitudeControl extends ControlInstrument {
+    type SelfType = SoundAmplitudeControl
+
+    override def self(): SelfType = this
+
+    val instrumentName: String = "soundAmplitudeControl"
+
+    var inBus: AudioInstrument = _
+    var attackTime: Double = _
+    var releaseTime: Double = _
+
+    def control(inBus: AudioInstrument, attackTime: Double, releaseTime: Double): SelfType = {
+      this.inBus = inBus
+      this.attackTime = attackTime
+      this.releaseTime = releaseTime
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(inBus.graph(parent))
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      Seq(
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+          startTime + inBus.optionalDur.getOrElse(duration)),
+        "attackTime", attackTime,
+        "releaseTime", releaseTime
+      )
     }
   }
 
@@ -1088,11 +1125,7 @@ object ModularSynth {
     val instrumentName: String = "fmTriangleModulate"
   }
 
-  class PlayBuffer extends AudioInstrument  {
-      type SelfType = PlayBuffer
-      def self(): SelfType = this
-      val instrumentName: String = "playBuffer"
-    
+  abstract class PlayBuffer extends AudioInstrument  {
       var bufNum: Int = _
       var rate: Double = _
       var start: Double = _
@@ -1121,4 +1154,17 @@ object ModularSynth {
               startTime + ampBus.optionalDur.getOrElse(duration))
         )  
   }
+
+  class MonoPlayBuffer extends PlayBuffer {
+    type SelfType = MonoPlayBuffer
+    def self(): SelfType = this
+    val instrumentName: String = "monoPlayBuffer"
+  }
+
+  class StereoPlayBuffer extends PlayBuffer {
+    type SelfType = StereoPlayBuffer
+    def self(): SelfType = this
+    val instrumentName: String = "stereoPlayBuffer"
+  }
+  
 }

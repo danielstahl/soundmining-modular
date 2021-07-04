@@ -77,6 +77,15 @@ SynthDef(\threeBlockControl, {
 	Out.kr(out, threeBlockEnv);
 }).add.store('global', synthsDir);
 
+SynthDef(\soundAmplitudeControl, {
+	arg dur = 1, in = 0, out = 0, attackTime = 0.01, releaseTime = 0.01;
+	var sig, result;
+	Line.kr(dur:dur, doneAction:2);
+	sig = In.ar(in, 1);
+	result = Amplitude.kr(in:sig, attackTime:attackTime, releaseTime:releaseTime);
+	Out.kr(out, result);
+}).add.store('global', synthsDir);
+
 SynthDef(\whiteNoiseOsc, {
 	arg dur = 1, ampBus = 0, out = 0;
 	var noise, amp;
@@ -386,7 +395,7 @@ SynthDef(\reverb, {
 	Out.ar(0, input + (sig * wet));
 }).add.store('global', synthsDir);
 
-SynthDef(\playBuffer, {
+SynthDef(\stereoPlayBuffer, {
 	arg bufNum, rate = 1, start = 0, end = 0, out = 0, ampBus = 0;
 	var totalDur, startFrame, endFrame, amp;
 
@@ -402,7 +411,21 @@ SynthDef(\playBuffer, {
 			Line.ar(startFrame, endFrame, totalDur, doneAction:2)) * amp);
 }).add.store('global', synthsDir);
 
-"Added Instruments".postln;
+SynthDef(\monoPlayBuffer, {
+	arg bufNum, rate = 1, start = 0, end = 0, out = 0, ampBus = 0;
+	var totalDur, startFrame, endFrame, amp;
+
+	totalDur = ((end - start) / rate).abs;
+
+	startFrame = (start / BufDur.kr(bufNum)) * BufFrames.kr(bufNum);
+	endFrame = (end / BufDur.kr(bufNum)) * BufFrames.kr(bufNum);
+	Line.kr(dur:totalDur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+
+	Out.ar(out,
+		BufRd.ar(1, bufNum,
+			Line.ar(startFrame, endFrame, totalDur, doneAction:2)) * amp);
+}).add.store('global', synthsDir);
 )
 
 
