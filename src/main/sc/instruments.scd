@@ -65,6 +65,26 @@ SynthDef(\controlMix, {
 	Out.kr(out, result);
 }).add.store('global', synthsDir);
 
+SynthDef(\controlMultiply, {
+	arg dur = 1, in1 = 0, in2 = 0, out = 0;
+	var sig1, sig2, result;
+	Line.kr(dur:dur, doneAction:2);
+	sig1 = In.kr(in1, 1);
+	sig2 = In.kr(in2, 1);
+	result = sig1 * sig2;
+	Out.kr(out, result);
+}).add.store('global', synthsDir);
+
+SynthDef(\controlSum, {
+	arg dur = 1, in1 = 0, in2 = 0, out = 0;
+	var sig1, sig2, result;
+	Line.kr(dur:dur, doneAction:2);
+	sig1 = In.kr(in1, 1);
+	sig2 = In.kr(in2, 1);
+	result = sig1 + sig2;
+	Out.kr(out, result);
+}).add.store('global', synthsDir);
+
 SynthDef(\threeBlockControl, {
 	arg dur = 1, startValue1, len1, startValue2, len2, startValue3, len3, endValue3, curve = 'lin', out = 0;
 	var threeBlockEnv;
@@ -355,6 +375,16 @@ SynthDef(\pan, {
 
 	input = In.ar(in, 1);
 	Out.ar(out, LinPan2.ar(input, pan));
+}).add.store('global', synthsDir);
+
+SynthDef(\splay, {
+	arg dur = 1, in = 0, out = 0, spreadBus = 0, level = 1, centerBus = 1;
+	var spread, center, input;
+	Line.kr(dur:dur, doneAction:2);
+	spread = In.kr(spreadBus, 1);
+	center = In.kr(centerBus, 1);
+	input = In.ar(in, 1);
+	Out.ar(out, Splay.ar(input, spread, level, center));
 }).add.store('global', synthsDir);
 
 SynthDef(\monoDelay, {
