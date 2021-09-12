@@ -106,6 +106,11 @@ case class SoundPlays(soundPlays: Map[String, SoundPlay], masterVolume: Double =
       this
     }
 
+    def bandReject(filterFreq: Double, rq: Double): SoundNotePlayer = {
+      soundNote.bandReject(staticControl(filterFreq), staticControl(rq))
+      this
+    }
+
     def pan(panControl: () => ControlInstrument): SoundNotePlayer = {
       soundNote.pan(panControl())
       this
@@ -120,6 +125,22 @@ case class SoundPlays(soundPlays: Map[String, SoundPlay], masterVolume: Double =
       pan(() => lineControl(startPos, endPos))
       this
     }
+
+    def splay(spread: ControlInstrument, center: ControlInstrument): SoundNotePlayer = {
+      soundNote.splayPan(spread, center)
+      this
+    }
+
+    def splay(spread: Double, startCenter: Double, endCenter: Double): SoundNotePlayer = {
+      splay(staticControl(spread), lineControl(startCenter, endCenter))
+      this
+    }
+
+    def splay(spread: Double, center: Double): SoundNotePlayer = {
+      splay(staticControl(spread), staticControl(center))
+      this
+    }
+
     def play(startTime: Double, outputBus: Int): Unit =
       soundNote.play(startTime, getRealOutputBus(outputBus))
   }

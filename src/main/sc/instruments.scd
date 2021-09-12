@@ -272,6 +272,17 @@ SynthDef(\bandPassFilter, {
 	Out.ar(out, sig);
 }).add.store('global', synthsDir);
 
+SynthDef(\bandRejectFilter, {
+	arg dur = 1, in = 0, freqBus = 0, rqBus = 0, out = 0;
+	var input, sig, freq, rq;
+	Line.kr(dur:dur, doneAction:2);
+	input = In.ar(in, 1);
+	freq = In.kr(freqBus, 1);
+	rq = In.kr(rqBus, 1);
+	sig = BRF.ar(input, freq, rq);
+	Out.ar(out, sig);
+}).add.store('global', synthsDir);
+
 SynthDef(\ringModulate, {
 	arg dur = 1, carrierBus = 0, modulatorFreqBus = 0, out = 0;
 	var carrier, modulatorFreq, sig;

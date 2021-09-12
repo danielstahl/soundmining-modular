@@ -107,6 +107,9 @@ object ModularSynth {
   def bandPassFilter(inBus: AudioInstrument, freqBus: ControlInstrument, rqBus: ControlInstrument): BandPassFilter =
     new BandPassFilter().filter(inBus, freqBus, rqBus)
 
+  def bandRejectFilter(inBus: AudioInstrument, freqBus: ControlInstrument, rqBus: ControlInstrument): BandRejectFilter =
+    new BandRejectFilter().filter(inBus, freqBus, rqBus)
+
   def ringModulate(carrierBus: AudioInstrument, modulatorFreqBus: ControlInstrument): RingModulate =
     new RingModulate().modulate(carrierBus, modulatorFreqBus)
 
@@ -1103,6 +1106,40 @@ object ModularSynth {
             startTime + freqBus.optionalDur.getOrElse(duration)),
         "rqBus", rqBus.getOutputBus.dynamicBus(startTime,
             startTime + rqBus.optionalDur.getOrElse(duration)))
+    }
+  }
+
+  class BandRejectFilter extends AudioInstrument {
+    type SelfType = BandRejectFilter
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "bandRejectFilter"
+
+    var inBus: AudioInstrument = _
+    var freqBus: ControlInstrument = _
+    var rqBus: ControlInstrument = _
+
+    def filter(inBus: AudioInstrument, freqBus: ControlInstrument, rqBus: ControlInstrument): SelfType = {
+      this.inBus = inBus
+      this.freqBus = freqBus
+      this.rqBus = rqBus
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(inBus.graph(freqBus.graph(rqBus.graph(parent))))
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
+
+      Seq(
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+          startTime + inBus.optionalDur.getOrElse(duration)),
+        "freqBus", freqBus.getOutputBus.dynamicBus(startTime,
+          startTime + freqBus.optionalDur.getOrElse(duration)),
+        "rqBus", rqBus.getOutputBus.dynamicBus(startTime,
+          startTime + rqBus.optionalDur.getOrElse(duration)))
     }
   }
 

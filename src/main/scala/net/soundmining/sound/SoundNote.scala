@@ -1,6 +1,7 @@
 package net.soundmining.sound
 
 import net.soundmining.modular.ModularInstrument._
+import net.soundmining.modular.ModularSynth
 import net.soundmining.modular.ModularSynth._
 import net.soundmining.synth.Instrument._
 import net.soundmining.synth.SuperColliderClient
@@ -63,6 +64,14 @@ abstract class SoundNote(bufNum: Integer = 0) {
         self()
     }
 
+    def bandReject(filterFreq: ControlInstrument, rqBus: ControlInstrument): SelfType = {
+        audio = audio.map {
+            case Audio(audioInstrument, dur) =>
+                Audio(bandRejectFilter(audioInstrument, filterFreq, rqBus).addAction(TAIL_ACTION), dur)
+        }
+        self()
+    }
+
     def ring(modularFreq: ControlInstrument): SelfType = {
         audio = audio.map {
             case Audio(audioInstrument, dur) => 
@@ -75,6 +84,14 @@ abstract class SoundNote(bufNum: Integer = 0) {
         audio = audio.map {
             case Audio(audioInstrument, dur) =>
                 Audio(panning(audioInstrument, panPosition).addAction(TAIL_ACTION).withNrOfChannels(2), dur)
+        }
+        self()
+    }
+
+    def splayPan(spread: ControlInstrument, center: ControlInstrument): SelfType = {
+        audio = audio.map {
+            case Audio(audioInstrument, dur) =>
+                Audio(splay(audioInstrument, spread, center).addAction(TAIL_ACTION).withNrOfChannels(2), dur)
         }
         self()
     }
