@@ -59,6 +59,9 @@ object ModularSynth {
   def reverb(inBus: AudioInstrument, preDelay: Double, wet: Double, combDelay: Double, combDecay: Double, allpassDelay: Double, allpassDecay: Double): Reverb =
     new Reverb().reverb(inBus, preDelay, wet, combDelay, combDecay, allpassDelay, allpassDecay)
 
+  def convolutionReverb(inBus: AudioInstrument, irLeftBus: Int, irRightBus: Int, amp: Double = 1.0, fftSize: Int = 2048): ConvolutionReverb =
+    new ConvolutionReverb().reverb(inBus, irLeftBus, irRightBus, amp, fftSize)
+
   def xfade(in1Bus: AudioInstrument, in2Bus: AudioInstrument, xfadeBus: ControlInstrument): XFade =
     new XFade().xfade(in1Bus: AudioInstrument, in2Bus: AudioInstrument, xfadeBus: ControlInstrument)
 
@@ -574,9 +577,7 @@ object ModularSynth {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(inBus.graph(parent)))
 
-    def getInputBus(startTime: Double, durationFallback: Double): Int =
-      this.inBus.getOutputBus.dynamicBus(startTime,
-        startTime + inBus.optionalDur.getOrElse(durationFallback))
+    def getInputBus(startTime: Double, durationFallback: Double): Int
 
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
@@ -595,6 +596,10 @@ object ModularSynth {
 
     override def self(): SelfType = this
 
+    override def getInputBus(startTime: Double, durationFallback: Double): Int =
+      this.inBus.getOutputBus.dynamicBus(startTime,
+        startTime + inBus.optionalDur.getOrElse(durationFallback))
+
     override val instrumentName: String = "monoDelay"
   }
 
@@ -602,6 +607,10 @@ object ModularSynth {
     override type SelfType = StereoDelay
 
     override def self(): SelfType = this
+
+    override def getInputBus(startTime: Double, durationFallback: Double): Int =
+      this.inBus.getOutputBus.dynamicBus(startTime,
+        startTime + inBus.optionalDur.getOrElse(durationFallback), nrOfChannels = 2)
 
     override val instrumentName: String = "stereoDelay"
   }
@@ -650,6 +659,48 @@ object ModularSynth {
         "combdecay", combdecay,
         "allpassdelay", allpassdelay,
         "allpassdecay", allpassdecay)
+    }
+  }
+
+  class ConvolutionReverb extends AudioInstrument {
+
+    override type SelfType = ConvolutionReverb
+
+    override def self(): SelfType = this
+
+    override val instrumentName: String = "stereoConvolutionReverb"
+
+    var inBus: AudioInstrument = _
+    var irLeftBus: Int = _
+    var irRightBus: Int = _
+    var amp: Double = _
+    var fftSize: Int = _
+
+    def reverb(inBus: AudioInstrument, irLeftBus: Int, irRightBus: Int, amp: Double = 1.0, fftSize: Int = 2048): SelfType = {
+      this.inBus = inBus
+      this.irLeftBus = irLeftBus
+      this.irRightBus = irRightBus
+      this.amp = amp
+      this.fftSize = fftSize
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(inBus.graph(parent))
+
+    def getInputBus(startTime: Double, durationFallback: Double): Int =
+      this.inBus.getOutputBus.dynamicBus(startTime,
+        startTime + inBus.optionalDur.getOrElse(durationFallback),
+        2)
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
+
+      Seq("in", getInputBus(startTime, durationFallback),
+        "fftSize", fftSize,
+        "irLeft", irLeftBus,
+        "irRight", irRightBus,
+        "amp", amp)
     }
   }
 

@@ -91,13 +91,34 @@ case class SoundPlays(soundPlays: Map[String, SoundPlay], masterVolume: Double =
       this
     }
 
+    def ring(startModulator: Double, endModulator: Double): SoundNotePlayer = {
+      soundNote.ring(lineControl(startModulator, endModulator))
+      this
+    }
+
     def highPass(filterFreq: Double): SoundNotePlayer = {
-      soundNote.highPass(staticControl(filterFreq))
+      highPass(staticControl(filterFreq))
+    }
+
+    def highPass(startFreq: Double, endFreq: Double): SoundNotePlayer = {
+      highPass(lineControl(startFreq, endFreq))
+    }
+
+    def highPass(filterFreq: ControlInstrument): SoundNotePlayer = {
+      soundNote.highPass(filterFreq)
       this
     }
 
     def lowPass(filterFreq: Double): SoundNotePlayer = {
-      soundNote.lowPass(staticControl(filterFreq))
+      lowPass(staticControl(filterFreq))
+    }
+
+    def lowPass(startFreq: Double, endFreq: Double): SoundNotePlayer = {
+      lowPass(lineControl(startFreq, endFreq))
+    }
+
+    def lowPass(filterFreq: ControlInstrument): SoundNotePlayer = {
+      soundNote.lowPass(filterFreq)
       this
     }
 
@@ -141,8 +162,10 @@ case class SoundPlays(soundPlays: Map[String, SoundPlay], masterVolume: Double =
       this
     }
 
-    def play(startTime: Double, outputBus: Int): Unit =
-      soundNote.play(startTime, getRealOutputBus(outputBus))
+    def play(startTime: Double, outputBus: Int, realOutput: Boolean = true): Unit = {
+      val out = if(realOutput) getRealOutputBus(outputBus) else outputBus
+      soundNote.play(startTime, out)
+    }
   }
 
   def mono(name:String): SoundNotePlayer = {

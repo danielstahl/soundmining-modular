@@ -406,7 +406,7 @@ SynthDef(\monoDelay, {
 	input = In.ar(in, 1);
 	delaySig = CombL.ar(input, delaytime, delaytime, decaytime, mul:amp);
 
-	Out.ar(out, delaySig + input);
+	Out.ar(out, delaySig);
 }).add.store('global', synthsDir);
 
 SynthDef(\stereoDelay, {
@@ -417,7 +417,7 @@ SynthDef(\stereoDelay, {
 	input = In.ar(in, 2);
 	delaySig = CombL.ar(input, delaytime, delaytime, decaytime, mul:amp);
 
-	Out.ar(out, delaySig + input);
+	Out.ar(out, delaySig);
 }).add.store('global', synthsDir);
 
 SynthDef(\reverb, {
@@ -434,6 +434,17 @@ SynthDef(\reverb, {
 	4.do({ sig = AllpassN.ar(sig, allpassdelay + 0.001, [Rand(0.01, allpassdelay), Rand(0.01, allpassdelay)], allpassdecay) });
 
 	Out.ar(0, input + (sig * wet));
+}).add.store('global', synthsDir);
+
+SynthDef(\stereoConvolutionReverb, {
+	arg dur = 1, fftSize=2048, in, out=0, irLeft, irRight, amp=1.0;
+	var input, output;
+
+	Line.kr(dur:dur, doneAction:2);
+	input = In.ar(in, 2);
+
+	output = PartConv.ar(input, fftSize, [irLeft, irRight], amp);
+	Out.ar(out, output);
 }).add.store('global', synthsDir);
 
 SynthDef(\stereoPlayBuffer, {
@@ -467,6 +478,8 @@ SynthDef(\monoPlayBuffer, {
 		BufRd.ar(1, bufNum,
 			Line.ar(startFrame, endFrame, totalDur, doneAction:2)) * amp);
 }).add.store('global', synthsDir);
+
+
 )
 
 
