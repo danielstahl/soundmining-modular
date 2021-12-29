@@ -1,6 +1,6 @@
 package net.soundmining.sound
 
-import net.soundmining.modular.ModularInstrument.ControlInstrument
+import net.soundmining.modular.ModularInstrument.{AudioInstrument, ControlInstrument, StaticAudioBusInstrument}
 import net.soundmining.modular.ModularSynth.{lineControl, staticControl}
 import net.soundmining.synth.SuperColliderClient
 import net.soundmining.synth.SuperColliderClient.allocRead
@@ -61,8 +61,14 @@ case class SoundPlays(soundPlays: Map[String, SoundPlay], masterVolume: Double =
   }
 
   case class SoundNotePlayer(soundPlay: SoundPlay, soundNote: SoundNote) {
+
+    def playMono(start: Double, end: Double, rate: Double, volume: Double): SoundNotePlayer = {
+      soundNote.playMono(start, end, rate, soundPlay.amp(volume * masterVolume))
+      this
+    }
+
     def playMono(rate: Double, volume: Double): SoundNotePlayer = {
-      soundNote.playMono(soundPlay.start, soundPlay.end, rate, soundPlay.amp(volume * masterVolume))
+      playMono(soundPlay.start, soundPlay.end, rate, volume)
       this
     }
 
@@ -93,6 +99,26 @@ case class SoundPlays(soundPlays: Map[String, SoundPlay], masterVolume: Double =
 
     def ring(startModulator: Double, endModulator: Double): SoundNotePlayer = {
       soundNote.ring(lineControl(startModulator, endModulator))
+      this
+    }
+
+    def am(modulator: Double): SoundNotePlayer = {
+      soundNote.am(staticControl(modulator))
+      this
+    }
+
+    def am(startModulator: Double, endModulator: Double): SoundNotePlayer = {
+      soundNote.am(lineControl(startModulator, endModulator))
+      this
+    }
+
+    def frequencyShift(modularFreq: ControlInstrument): SoundNotePlayer = {
+      soundNote.frequencyShift(modularFreq)
+      this
+    }
+
+    def bitCrushing(amount: ControlInstrument): SoundNotePlayer = {
+      soundNote.bitCrushing(amount)
       this
     }
 
@@ -164,6 +190,11 @@ case class SoundPlays(soundPlays: Map[String, SoundPlay], masterVolume: Double =
 
     def play(startTime: Double, outputBus: Int, realOutput: Boolean = true): Unit = {
       val out = if(realOutput) getRealOutputBus(outputBus) else outputBus
+      soundNote.play(startTime, out)
+    }
+
+    def play(startTime: Double, output: AudioInstrument): Unit = {
+      val out = output.getOutputBus.busValue.get
       soundNote.play(startTime, out)
     }
   }

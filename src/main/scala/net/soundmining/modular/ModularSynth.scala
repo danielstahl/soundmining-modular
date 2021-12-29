@@ -119,6 +119,12 @@ object ModularSynth {
   def amModulate(carrierBus: AudioInstrument, modulatorFreqBus: ControlInstrument): AmModulate =
     new AmModulate().modulate(carrierBus, modulatorFreqBus)
 
+  def frequencyShift(carrierBus: AudioInstrument, modulatorFreqBus: ControlInstrument): FrequencyShift =
+    new FrequencyShift().frequencyShift(carrierBus, modulatorFreqBus)
+
+  def bitCrushing(inBus: AudioInstrument, amountBus: ControlInstrument): BitCrushing =
+    new BitCrushing().bitCrushing(inBus, amountBus)
+
   def fmSineModulate(carrierFreqBus: ControlInstrument, modulatorBus: AudioInstrument,
                ampBus: ControlInstrument): FmSineModulate =
     new FmSineModulate().modulate(carrierFreqBus, modulatorBus, ampBus)
@@ -1251,6 +1257,64 @@ object ModularSynth {
             startTime + carrierBus.optionalDur.getOrElse(duration)),
         "modulatorFreqBus", modulatorFreqBus.getOutputBus.dynamicBus(startTime,
             startTime + modulatorFreqBus.optionalDur.getOrElse(duration)))
+    }
+  }
+
+  class FrequencyShift extends AudioInstrument {
+    type SelfType = FrequencyShift
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "frequencyShift"
+
+    var carrierBus: AudioInstrument = _
+    var modulatorFreqBus: ControlInstrument = _
+
+    def frequencyShift(carrierBus: AudioInstrument, modulatorFreqBus: ControlInstrument): SelfType = {
+      this.carrierBus = carrierBus
+      this.modulatorFreqBus = modulatorFreqBus
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(carrierBus.graph(modulatorFreqBus.graph(parent)))
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      Seq(
+        "carrierBus", carrierBus.getOutputBus.dynamicBus(startTime,
+          startTime + carrierBus.optionalDur.getOrElse(duration)),
+        "modulatorFreqBus", modulatorFreqBus.getOutputBus.dynamicBus(startTime,
+          startTime + modulatorFreqBus.optionalDur.getOrElse(duration)))
+    }
+  }
+
+  class BitCrushing extends AudioInstrument {
+    type SelfType = BitCrushing
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "bitCrushing"
+
+    var inBus: AudioInstrument = _
+    var amountBus: ControlInstrument = _
+
+    def bitCrushing(inBus: AudioInstrument, amountBus: ControlInstrument): SelfType = {
+      this.inBus = inBus
+      this.amountBus = amountBus
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(inBus.graph(amountBus.graph(parent)))
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Object] = {
+      val durationFallback: Double = duration
+
+      Seq(
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+          startTime + inBus.optionalDur.getOrElse(duration)),
+        "amountBus", amountBus.getOutputBus.dynamicBus(startTime,
+          startTime + amountBus.optionalDur.getOrElse(duration)))
     }
   }
 

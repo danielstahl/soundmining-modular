@@ -80,6 +80,30 @@ abstract class SoundNote(bufNum: Integer = 0) {
         self()
     }
 
+    def am(modularFreq: ControlInstrument): SelfType = {
+        audio = audio.map {
+            case Audio(audioInstrument, dur) =>
+                Audio(amModulate(audioInstrument, modularFreq).addAction(TAIL_ACTION), dur)
+        }
+        self()
+    }
+
+    def frequencyShift(modularFreq: ControlInstrument): SelfType = {
+        audio = audio.map {
+            case Audio(audioInstrument, dur) =>
+                Audio(ModularSynth.frequencyShift(audioInstrument, modularFreq).addAction(TAIL_ACTION), dur)
+        }
+        self()
+    }
+
+    def bitCrushing(amount: ControlInstrument): SelfType = {
+        audio = audio.map {
+            case Audio(audioInstrument, dur) =>
+                Audio(ModularSynth.bitCrushing(audioInstrument, amount).addAction(TAIL_ACTION), dur)
+        }
+        self()
+    }
+
     def pan(panPosition: ControlInstrument): SelfType = {
         audio = audio.map {
             case Audio(audioInstrument, dur) =>
@@ -130,7 +154,7 @@ abstract class SoundNote(bufNum: Integer = 0) {
         self()
     }
 
-    def play(startTime: Double, outputBus: Int = 0)(implicit client: SuperColliderClient) = {
+    def play(startTime: Double, outputBus: Int = 0)(implicit client: SuperColliderClient): Unit = {
         audio.foreach {
             case Audio(audioInstrument, dur) =>
                 audioInstrument.getOutputBus.staticBus(outputBus)
@@ -138,6 +162,10 @@ abstract class SoundNote(bufNum: Integer = 0) {
                 
                 client.send(client.newBundle(absoluteTimeToMillis(startTime), graph))
         }
+    }
+
+    def play(outputBus: Int = 0)(implicit client: SuperColliderClient): Unit = {
+        play(System.currentTimeMillis() - client.clockTime + client.DELAY, outputBus)
     }
 }
 

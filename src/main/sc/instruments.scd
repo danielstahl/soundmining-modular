@@ -303,6 +303,26 @@ SynthDef(\amModulate, {
 	Out.ar(out, sig);
 }).add.store('global', synthsDir);
 
+SynthDef(\frequencyShift, {
+	arg dur = 1, carrierBus = 0, modulatorFreqBus = 0, out = 0;
+	var carrier, modulatorFreq, sig;
+	Line.kr(dur:dur, doneAction:2);
+	carrier = In.ar(carrierBus, 1);
+	modulatorFreq = In.ar(modulatorFreqBus, 1);
+	sig = FreqShift.ar(carrier, modulatorFreq);
+	Out.ar(out, sig);
+}).add.store('global', synthsDir);
+
+SynthDef(\bitCrushing, {
+	arg dur = 1, in = 0, amountBus = 0, out = 0;
+	var input, amount, sig;
+	Line.kr(dur:dur, doneAction:2);
+	input = In.ar(in, 1);
+	amount = In.kr(amountBus, 1);
+	sig = (input / amount).round * amount;
+	Out.ar(out, sig);
+}).add.store('global', synthsDir);
+
 SynthDef(\pmModulate, {
 	arg dur = 1, carrierFreqBus = 0, modulatorFreqBus = 0, modulatorIndexBus = 0, ampBus = 0, out = 0;
 	var carrierFreq, modulatorFreq, modulatorIndex, sig, conversion = 2pi/(s.sampleRate), amp;
@@ -481,7 +501,3 @@ SynthDef(\monoPlayBuffer, {
 
 
 )
-
-
-
-
