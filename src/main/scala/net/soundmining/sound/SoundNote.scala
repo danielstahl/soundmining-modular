@@ -163,10 +163,6 @@ abstract class SoundNote(bufNum: Integer = 0) {
                 client.send(client.newBundle(absoluteTimeToMillis(startTime), graph))
         }
     }
-
-    def play(outputBus: Int = 0)(implicit client: SuperColliderClient): Unit = {
-        play(System.currentTimeMillis() - client.clockTime + client.DELAY, outputBus)
-    }
 }
 
 case class MonoSoundNote(bufNum: Int = 0) extends SoundNote(bufNum) {
@@ -174,7 +170,7 @@ case class MonoSoundNote(bufNum: Int = 0) extends SoundNote(bufNum) {
     override def self(): SelfType = this
 }
 
-case class StereoSoundNote(bufNum: Int = 0) extends SoundNote(bufNum) {
+case class StereoSoundNote(bufNum: Int) extends SoundNote(bufNum) {
     override type SelfType = StereoSoundNote
     override def self(): SelfType = this
     var leftNote: MonoSoundNote = MonoSoundNote(bufNum)

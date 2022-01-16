@@ -85,6 +85,18 @@ SynthDef(\controlSum, {
 	Out.kr(out, result);
 }).add.store('global', synthsDir);
 
+SynthDef(\twoBlockControl, {
+	arg dur = 1, startValue1, len1, startValue2, len2, endValue2, curve = 'lin', out = 0;
+	var twoBlockEnv;
+	threeBlockEnv = EnvGen.kr(
+		Env.new(
+			levels: [startValue1, startValue2, endValue2],
+			times: [len1, len2],
+			curve: curve),
+		doneAction:2);
+	Out.kr(out, twoBlockEnv);
+}).add.store('global', synthsDir);
+
 SynthDef(\threeBlockControl, {
 	arg dur = 1, startValue1, len1, startValue2, len2, startValue3, len3, endValue3, curve = 'lin', out = 0;
 	var threeBlockEnv;

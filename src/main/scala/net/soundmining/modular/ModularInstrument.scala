@@ -49,7 +49,6 @@ object ModularInstrument {
 
   class AudioBus extends Bus {
     def busAllocator: BusAllocator = BusAllocator.audio
-
   }
 
   class ControlBus extends Bus {
@@ -150,7 +149,7 @@ object ModularInstrument {
           Integer.valueOf(-1), addAction.action, nodeId.nodeId,
           "out", getOutputBus.dynamicBus(startTime, startTime + finalDuration, nrOfChannels),
           "dur", finalDuration
-        ) ++ internalBuild(startTime, duration)
+        ) ++ internalBuild(startTime, finalDuration)
         instrumentIsBuilt = true
         graph
       } else {
