@@ -88,7 +88,7 @@ SynthDef(\controlSum, {
 SynthDef(\twoBlockControl, {
 	arg dur = 1, startValue1, len1, startValue2, len2, endValue2, curve = 'lin', out = 0;
 	var twoBlockEnv;
-	threeBlockEnv = EnvGen.kr(
+	twoBlockEnv = EnvGen.kr(
 		Env.new(
 			levels: [startValue1, startValue2, endValue2],
 			times: [len1, len2],
@@ -124,6 +124,15 @@ SynthDef(\whiteNoiseOsc, {
 	Line.kr(dur:dur, doneAction:2);
 	amp = In.kr(ampBus, 1);
 	noise = WhiteNoise.ar(amp);
+	Out.ar(out, noise);
+}).add.store('global', synthsDir);
+
+SynthDef(\pinkNoiseOsc, {
+	arg dur = 1, ampBus = 0, out = 0;
+	var noise, amp;
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	noise = PinkNoise.ar(amp);
 	Out.ar(out, noise);
 }).add.store('global', synthsDir);
 

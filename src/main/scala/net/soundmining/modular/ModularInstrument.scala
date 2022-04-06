@@ -28,6 +28,7 @@ import java.util.UUID
   * to a control bus or a audio bus.
   */
 object ModularInstrument {
+  var DEBUG = false
 
   trait Bus {
     def busAllocator: BusAllocator
@@ -37,6 +38,13 @@ object ModularInstrument {
       if(busValue.isEmpty) {
         val allocatedBuses = busAllocator.allocate(nrOfChannels, startTime, endTime)
         this.busValue = Option(allocatedBuses.head)
+        busValue.foreach {
+          busVal =>
+            if(DEBUG) {
+              println(s"Allocated ${this.getClass.getSimpleName} ch $busVal $nrOfChannels channels from $startTime to $endTime")
+            }
+
+        }
       }
       busValue.get
     }

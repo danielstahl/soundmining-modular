@@ -11,16 +11,16 @@ object ModularSynth {
   def staticControl(value: Double): StaticControl =
     new StaticControl().control(value)
 
-  def percControl(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Double, EnvCurve]): PercControl =
+  def percControl(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Seq[Double], EnvCurve]): PercControl =
     new PercControl().control(startValue, peakValue, attackTime, curve)
 
-  def relativePercControl(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Double, EnvCurve]): PercControl =
+  def relativePercControl(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Seq[Double], EnvCurve]): PercControl =
     new RelativePercControl().control(startValue, peakValue, attackTime, curve)
 
-  def threeBlockcontrol(startValue1: Double, len1: Double, startValue2: Double, len2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Double, EnvCurve]): ThreeBlockControl =
+  def threeBlockcontrol(startValue1: Double, len1: Double, startValue2: Double, len2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Seq[Double], EnvCurve]): ThreeBlockControl =
     new ThreeBlockControl().control(startValue1, len1, startValue2, len2, startValue3, len3, endValue3, curve)
 
-  def relativeThreeBlockcontrol(startValue1: Double, len1: Double, startValue2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Double, EnvCurve]): RelativeThreeBlockControl =
+  def relativeThreeBlockcontrol(startValue1: Double, len1: Double, startValue2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Seq[Double], EnvCurve]): RelativeThreeBlockControl =
     new RelativeThreeBlockControl().control(startValue1, len1, startValue2, startValue3, len3, endValue3, curve)
 
   def lineControl(startValue: Double, endValue: Double): LineControl =
@@ -92,6 +92,9 @@ object ModularSynth {
   def whiteNoiseOsc(ampBus: ControlInstrument): WhiteNoiseOsc =
     new WhiteNoiseOsc().whiteNoise(ampBus)
 
+  def pinkNoiseOsc(ampBus: ControlInstrument): PinkNoiseOsc =
+    new PinkNoiseOsc().pinkNoise(ampBus)
+
   def dustOsc(ampBus: ControlInstrument, freqBus: ControlInstrument): DustOsc =
     new DustOsc().dust(ampBus, freqBus)
 
@@ -155,11 +158,11 @@ object ModularSynth {
     val instrumentName: String = "percControl"
 
     var attackTime: Double = _
-    var curveValue: Either[Double, EnvCurve] = Left(-4f)
+    var curveValue: Either[Seq[Double], EnvCurve] = Left(Seq(-4f, -4f))
     var startValue: Double = _
     var peakValue: Double = _
 
-    def control(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Double, EnvCurve]): SelfType = {
+    def control(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Seq[Double], EnvCurve]): SelfType = {
       this.startValue = startValue
       this.peakValue = peakValue
       this.attackTime = attackTime
@@ -176,7 +179,7 @@ object ModularSynth {
         "peakValue", peakValue,
         "attackTime", attackTime,
         "curve", curveValue match {
-          case Left(floatValue) => floatValue
+          case Left(floatSeq) => floatSeq
           case Right(constant) => constant.name
         })
   }
@@ -207,9 +210,9 @@ object ModularSynth {
     var startValue3: Double = _
     var len3: Double = _
     var endValue3: Double = _
-    var curveValue: Either[Double, EnvCurve] = Left(-4f)
+    var curveValue: Either[Seq[Double], EnvCurve] = Left(Seq(-4, -4))
 
-    def control(startValue1: Double, len1: Double, startValue2: Double, len2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Double, EnvCurve]): SelfType = {
+    def control(startValue1: Double, len1: Double, startValue2: Double, len2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Seq[Double], EnvCurve]): SelfType = {
       this.startValue1 = startValue1
       this.len1 = len1
       this.startValue2 = startValue2
@@ -234,7 +237,7 @@ object ModularSynth {
         "len3", len3,
         "endValue3", endValue3,
         "curve", curveValue match {
-          case Left(floatValue) => floatValue
+          case Left(curveArray) => curveArray
           case Right(constant) => constant.name
         })
   }
@@ -252,9 +255,9 @@ object ModularSynth {
     var startValue3: Double = _
     var len3: Double = _
     var endValue3: Double = _
-    var curveValue: Either[Double, EnvCurve] = Left(-4f)
+    var curveValue: Either[Seq[Double], EnvCurve] = Left(Seq(-4, -4))
 
-    def control(startValue1: Double, len1: Double, startValue2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Double, EnvCurve]): SelfType = {
+    def control(startValue1: Double, len1: Double, startValue2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Seq[Double], EnvCurve]): SelfType = {
       this.startValue1 = startValue1
       this.len1 = len1
       this.startValue2 = startValue2
@@ -278,7 +281,7 @@ object ModularSynth {
         "len3", len3 * duration,
         "endValue3", endValue3,
         "curve", curveValue match {
-          case Left(floatValue) => floatValue
+          case Left(arrayValue) => arrayValue
           case Right(constant) => constant.name
         })
   }
@@ -584,7 +587,6 @@ object ModularSynth {
       appendToGraph(ampBus.graph(inBus.graph(parent)))
 
     def getInputBus(startTime: Double, durationFallback: Double): Int
-
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
       val durationFallback: Double = duration
@@ -964,6 +966,29 @@ object ModularSynth {
     var ampBus: ControlInstrument = _
 
     def whiteNoise(ampBus: ControlInstrument): SelfType = {
+      this.ampBus = ampBus
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(ampBus.graph(parent))
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
+      Seq(
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+          startTime + ampBus.optionalDur.getOrElse(duration)))
+  }
+
+  class PinkNoiseOsc extends AudioInstrument {
+    type SelfType = PinkNoiseOsc
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "pinkNoiseOsc"
+
+    var ampBus: ControlInstrument = _
+
+    def pinkNoise(ampBus: ControlInstrument): SelfType = {
       this.ampBus = ampBus
       self()
     }

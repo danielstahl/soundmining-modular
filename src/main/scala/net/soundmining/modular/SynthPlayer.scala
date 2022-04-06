@@ -1,19 +1,21 @@
 package net.soundmining.modular
 
 import net.soundmining.modular.ModularInstrument.{AudioInstrument, ControlInstrument}
-import net.soundmining.modular.ModularSynth.{amModulate, bandPassFilter, bandRejectFilter, dustOsc, fmPulseModulate, fmSawModulate, fmSineModulate, fmTriangleModulate, highPassFilter, left, lowPassFilter, monoPlayBuffer, panning, pulseOsc, right, ringModulate, sawOsc, sineOsc, soundAmplitudeControl, staticControl, stereoPlayBuffer, triangleOsc, whiteNoiseOsc}
-import net.soundmining.sound.{BufNumAllocator, SoundPlay}
+import net.soundmining.modular.ModularSynth._
 import net.soundmining.synth.Instrument.TAIL_ACTION
-import net.soundmining.synth.SuperColliderClient
+import net.soundmining.synth.{SuperColliderClient, SuperColliderScore}
 import net.soundmining.synth.Utils.absoluteTimeToMillis
 
 import scala.collection.mutable
 
 case class SynthPlayer(soundPlays: Map[String, SoundPlay], masterVolume: Double = 1.0, numberOfOutputBuses: Int = 2)(implicit val client: SuperColliderClient = SuperColliderClient()) {
 
+  val superColliderScore: SuperColliderScore = SuperColliderScore()
+
   def init(): Unit = {
     BufNumAllocator.reset()
     soundPlays.values.foreach(_.init)
+    superColliderScore.reset()
   }
 
   def getRealOutputBus(outputBus: Int): Int =
@@ -48,7 +50,7 @@ case class AudioStack() {
 }
 
 case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlayer) {
-  val audioStack = AudioStack()
+  private val audioStack = AudioStack()
 
   def playMono(start: Double, end: Double, rate: Double, volume: Double): SynthNote = {
     soundPlay.foreach {
@@ -140,8 +142,15 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     this
   }
 
-  def whiteNoise(amp: ControlInstrument): SynthNote = {
-    audioStack.push(whiteNoiseOsc(amp).addAction(TAIL_ACTION))
+  def whiteNoise(amp: ControlInstrument, optionalDur: Option[Double] = None): SynthNote = {
+    if(optionalDur.isDefined) audioStack.push(whiteNoiseOsc(amp).withDur(optionalDur.get).addAction(TAIL_ACTION))
+    else audioStack.push(whiteNoiseOsc(amp).addAction(TAIL_ACTION))
+    this
+  }
+
+  def pinkNoise(amp: ControlInstrument, optionalDur: Option[Double] = None): SynthNote = {
+    if(optionalDur.isDefined) audioStack.push(pinkNoiseOsc(amp).withDur(optionalDur.get).addAction(TAIL_ACTION))
+    else audioStack.push(pinkNoiseOsc(amp).addAction(TAIL_ACTION))
     this
   }
 
@@ -249,6 +258,13 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     this
   }
 
+  def delay(delayTime: Double, decayTime: Double, amp: ControlInstrument): SynthNote = {
+    audioStack.mapInstrument {
+      audio => ModularSynth.monoDelay(audio, amp, delayTime, decayTime).addAction(TAIL_ACTION)
+    }
+    this
+  }
+
   def pan(panPosition: ControlInstrument): SynthNote = {
     audioStack.mapInstrument {
       audio => panning(audio, panPosition)
@@ -265,6 +281,17 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
         audio.getOutputBus.staticBus(out)
         val graph = audio.buildGraph(startTime, duration, audio.graph(Seq()))
         synthPlayer.client.send(synthPlayer.client.newBundle(absoluteTimeToMillis(startTime), graph))
+    }
+  }
+
+  def writeToScore(startTime: Double, duration: Double, outputBus: Int = 0): Unit = {
+    val out = outputBus
+    audioStack.foreachInstrument {
+      audio =>
+        audio.getOutputBus.staticBus(out)
+        audio.buildGraph(startTime, duration, audio.graph(Seq()))
+          .map(SuperColliderClient.newSynthRaw)
+          .foreach(message => synthPlayer.superColliderScore.addMessage(startTime, message))
     }
   }
 
