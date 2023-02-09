@@ -5,14 +5,21 @@ import net.soundmining.synth.Instrument._
 
 object ModularSynth {
   
-  def staticAudioBus(): StaticAudioBusInstrument =
-    new StaticAudioBusInstrument()
+  def staticAudioBus(nrOfChannels: Int): StaticAudioBusInstrument = {
+    nrOfChannels match {
+      case 1 => new StaticMonoAudioBusInstrument()
+      case 2 => new StaticStereoAudioBusInstrument()
+    }
+  }
 
   def staticControl(value: Double): StaticControl =
     new StaticControl().control(value)
 
   def percControl(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Seq[Double], EnvCurve]): PercControl =
     new PercControl().control(startValue, peakValue, attackTime, curve)
+
+  def sineControl(startValue: Double, peakValue: Double): SineControl =
+    new SineControl().control(startValue, peakValue)
 
   def relativePercControl(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Seq[Double], EnvCurve]): PercControl =
     new RelativePercControl().control(startValue, peakValue, attackTime, curve)
@@ -29,8 +36,8 @@ object ModularSynth {
   def xlineControl(startValue: Double, endValue: Double): XLineControl =
     new XLineControl().control(startValue, endValue)
 
-  def sineControl(freqBus: ControlInstrument, minValue: Double, maxValue: Double): SineControl =
-    new SineControl().control(freqBus, minValue, maxValue)
+  def sineOscControl(freqBus: ControlInstrument, minValue: Double, maxValue: Double): SineOscControl =
+    new SineOscControl().control(freqBus, minValue, maxValue)
 
   def controlMix(in1Bus: ControlInstrument, in2Bus: ControlInstrument): ControlMix =
     new ControlMix().mix(in1Bus, in2Bus)
@@ -50,17 +57,42 @@ object ModularSynth {
   def splay(inBus: AudioInstrument, spreadBus: ControlInstrument, centerBus: ControlInstrument, level: Double = 1): Splay =
     new Splay().splay(inBus, spreadBus, centerBus, level)
 
-  def monoDelay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): MonoDelay =
-    new MonoDelay().delay(inBus, ampBus, delayTime, decayTime)
+  def monoComb(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): MonoComb =
+    new MonoComb().comb(inBus, ampBus, delayTime, decayTime)
 
-  def stereoDelay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): StereoDelay =
-    new StereoDelay().delay(inBus, ampBus, delayTime, decayTime)
+  def stereoComb(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): StereoComb =
+    new StereoComb().comb(inBus, ampBus, delayTime, decayTime)
 
-  def reverb(inBus: AudioInstrument, preDelay: Double, wet: Double, combDelay: Double, combDecay: Double, allpassDelay: Double, allpassDecay: Double): Reverb =
-    new Reverb().reverb(inBus, preDelay, wet, combDelay, combDecay, allpassDelay, allpassDecay)
+  def stereoParallelComb(inBus: AudioInstrument, ampBus: ControlInstrument, minDelayTime: Double, maxDelayTime: Double, decayTime: Double): StereoParallelComb =
+    new StereoParallelComb().comb(inBus, ampBus, minDelayTime, maxDelayTime, decayTime)
 
-  def convolutionReverb(inBus: AudioInstrument, irLeftBus: Int, irRightBus: Int, amp: Double = 1.0, fftSize: Int = 2048): ConvolutionReverb =
-    new ConvolutionReverb().reverb(inBus, irLeftBus, irRightBus, amp, fftSize)
+  def monoDelay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double): MonoDelay =
+    new MonoDelay().delay(inBus, ampBus, delayTime)
+
+  def stereoDelay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double): StereoDelay =
+    new StereoDelay().delay(inBus, ampBus, delayTime)
+
+  def monoAllpass(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): MonoAllpass =
+    new MonoAllpass().allpass(inBus, ampBus, delayTime, decayTime)
+
+  def stereoAllpass(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): StereoAllpass =
+    new StereoAllpass().allpass(inBus, ampBus, delayTime, decayTime)
+
+  def stereoChainAllpass(inBus: AudioInstrument, ampBus: ControlInstrument, minDelayTime: Double, maxDelayTime: Double, decayTime: Double): StereoChainAllpass =
+    new StereoChainAllpass().allpass(inBus, ampBus, minDelayTime, maxDelayTime, decayTime)
+
+  def stereoConvolutionReverb(inBus: AudioInstrument, ampBus: ControlInstrument, irLeftBus: Int, irRightBus: Int, amp: Double = 1.0, fftSize: Int = 2048): StereoConvolutionReverb =
+    new StereoConvolutionReverb().reverb(inBus, ampBus, irLeftBus, irRightBus, amp, fftSize)
+
+  def stereoHallReverb(inBus: AudioInstrument, ampBus: ControlInstrument,
+                       rt60: Double = 1, stereo: Double = 0.5, lowFreq: Double = 200, lowRatio: Double = 0.5,
+                       hiFreq: Double = 4000, hiRatio: Double = 0.5, earlyDiffusion: Double = 0.5, lateDiffusion: Double = 0.5,
+                       modRate: Double = 0.2, modDepth: Double = 0.3): StereoHallReverb =
+    new StereoHallReverb().reverb(inBus, ampBus, rt60, stereo, lowFreq, lowRatio, hiFreq, hiRatio, earlyDiffusion, lateDiffusion, modRate, modDepth)
+
+  def stereoFreeReverb(inBus: AudioInstrument, ampBus: ControlInstrument,
+                       mix: Double = 0.33, room: Double = 0.5, damp: Double = 0.5): StereoFreeReverb =
+    new StereoFreeReverb().reverb(inBus, ampBus, mix, room, damp)
 
   def xfade(in1Bus: AudioInstrument, in2Bus: AudioInstrument, xfadeBus: ControlInstrument): XFade =
     new XFade().xfade(in1Bus: AudioInstrument, in2Bus: AudioInstrument, xfadeBus: ControlInstrument)
@@ -73,6 +105,12 @@ object ModularSynth {
 
   def mix(in1Bus: AudioInstrument, in2Bus: AudioInstrument, ampBus: ControlInstrument): Mix =
     new Mix().mix(in1Bus: AudioInstrument, in2Bus: AudioInstrument, ampBus)
+
+  def monoVolume(inBus: AudioInstrument, ampBus: ControlInstrument): MonoVolume =
+    new MonoVolume().volume(inBus: AudioInstrument, ampBus)
+
+  def stereoVolume(inBus: AudioInstrument, ampBus: ControlInstrument): StereoVolume =
+    new StereoVolume().volume(inBus: AudioInstrument, ampBus)
 
   def expand(leftInBus: AudioInstrument, rightInBus: AudioInstrument): Expand = 
     new Expand().expand(leftInBus, rightInBus)
@@ -118,6 +156,12 @@ object ModularSynth {
 
   def ringModulate(carrierBus: AudioInstrument, modulatorFreqBus: ControlInstrument): RingModulate =
     new RingModulate().modulate(carrierBus, modulatorFreqBus)
+
+  def bankOfResonators(inBus: AudioInstrument, freqs: Seq[Double], amps: Seq[Double], ringTimes: Seq[Double]): BankOfResonators =
+    new BankOfResonators().bankOfResonators(inBus, freqs, amps, ringTimes)
+
+  def bankOfOsc(freqs: Seq[Double], amps: Seq[Double], phases: Seq[Double]): BankOfOsc =
+    new BankOfOsc().bankOfOsc(freqs, amps, phases)
 
   def amModulate(carrierBus: AudioInstrument, modulatorFreqBus: ControlInstrument): AmModulate =
     new AmModulate().modulate(carrierBus, modulatorFreqBus)
@@ -194,6 +238,31 @@ object ModularSynth {
           case Left(floatValue) => floatValue
           case Right(constant) => constant.name
         })
+  }
+
+  class SineControl extends ControlInstrument {
+    type SelfType = SineControl
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "sineControl"
+
+    var startValue: Double = _
+    var peakValue: Double = _
+
+    def control(startValue: Double, peakValue: Double): SelfType = {
+      this.startValue = startValue
+      this.peakValue = peakValue
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      prependToGraph(parent)
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
+      Seq(
+        "startValue", startValue,
+        "peakValue", peakValue)
   }
 
   class ThreeBlockControl extends ControlInstrument {
@@ -357,12 +426,12 @@ object ModularSynth {
       Seq("value", value)
   }
 
-  class SineControl extends ControlInstrument {
-    type SelfType = SineControl
+  class SineOscControl extends ControlInstrument {
+    type SelfType = SineOscControl
 
     def self(): SelfType = this
 
-    val instrumentName: String = "sineControl"
+    val instrumentName: String = "sineOscControl"
 
     var freqBus: ControlInstrument = _
     var minValue: Double = _
@@ -405,8 +474,6 @@ object ModularSynth {
       appendToGraph(in1Bus.graph(in2Bus.graph(parent)))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in1", in1Bus.getOutputBus.dynamicBus(startTime,
             startTime + in1Bus.optionalDur.getOrElse(duration)),
@@ -435,8 +502,6 @@ object ModularSynth {
       appendToGraph(in1Bus.graph(in2Bus.graph(parent)))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in1", in1Bus.getOutputBus.dynamicBus(startTime,
           startTime + in1Bus.optionalDur.getOrElse(duration)),
@@ -465,8 +530,6 @@ object ModularSynth {
       appendToGraph(in1Bus.graph(in2Bus.graph(parent)))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in1", in1Bus.getOutputBus.dynamicBus(startTime,
           startTime + in1Bus.optionalDur.getOrElse(duration)),
@@ -513,6 +576,8 @@ object ModularSynth {
 
     val instrumentName: String = "pan"
 
+    val nrOfChannels: Int = 2
+
     var inBus: AudioInstrument = _
     var panBus: ControlInstrument = _
 
@@ -540,6 +605,8 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "splay"
+
+    val nrOfChannels: Int = 2
 
     var inBus: AudioInstrument = _
     var spreadBus: ControlInstrument = _
@@ -569,13 +636,13 @@ object ModularSynth {
     }
   }
 
-  abstract class Delay extends AudioInstrument {
+  abstract class Comb extends AudioInstrument {
     var inBus: AudioInstrument = _
     var delaytime: Double = _
     var decaytime: Double = _
     var ampBus: ControlInstrument = _
 
-    def delay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): SelfType = {
+    def comb(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): SelfType = {
       this.inBus = inBus
       this.ampBus = ampBus
       this.delaytime = delayTime
@@ -586,16 +653,104 @@ object ModularSynth {
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
       appendToGraph(ampBus.graph(inBus.graph(parent)))
 
-    def getInputBus(startTime: Double, durationFallback: Double): Int
+    def getInputBus(startTime: Double, durationFallback: Double): Int =
+      this.inBus.getOutputBus.dynamicBus(startTime,
+        startTime + inBus.optionalDur.getOrElse(durationFallback), nrOfChannels = nrOfChannels)
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
-      Seq("in", getInputBus(startTime, durationFallback),
+      Seq("in", getInputBus(startTime, duration),
           "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
             startTime + ampBus.optionalDur.getOrElse(duration)),
           "delaytime", delaytime,
           "decaytime", decaytime)
+    }
+  }
+
+  class StereoParallelComb extends AudioInstrument {
+    type SelfType = StereoParallelComb
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "stereoParallelComb"
+
+    var inBus: AudioInstrument = _
+    var minDelaytime: Double = _
+    var maxDelaytime: Double = _
+    var decaytime: Double = _
+    var ampBus: ControlInstrument = _
+
+    def comb(inBus: AudioInstrument, ampBus: ControlInstrument, minDelayTime: Double, maxDelayTime: Double, decayTime: Double): SelfType = {
+      this.inBus = inBus
+      this.ampBus = ampBus
+      this.minDelaytime = minDelayTime
+      this.maxDelaytime = maxDelayTime
+      this.decaytime = decayTime
+      self()
+    }
+
+    val nrOfChannels: Int = 2
+
+    def getInputBus(startTime: Double, durationFallback: Double): Int =
+      this.inBus.getOutputBus.dynamicBus(startTime,
+        startTime + inBus.optionalDur.getOrElse(durationFallback), nrOfChannels = 2)
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(ampBus.graph(inBus.graph(parent)))
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      Seq("in", getInputBus(startTime, duration),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+          startTime + ampBus.optionalDur.getOrElse(duration)),
+        "minDelaytime", minDelaytime,
+        "maxDelaytime", maxDelaytime,
+        "decaytime", decaytime)
+    }
+  }
+
+  class MonoComb extends Comb {
+    override type SelfType = MonoComb
+
+    override def self(): SelfType = this
+
+    val nrOfChannels: Int = 1
+
+    override val instrumentName: String = "monoComb"
+  }
+
+  class StereoComb extends Comb {
+    override type SelfType = StereoComb
+
+    override def self(): SelfType = this
+
+    val nrOfChannels: Int = 2
+
+    override val instrumentName: String = "stereoComb"
+  }
+
+  abstract class Delay extends AudioInstrument {
+    var inBus: AudioInstrument = _
+    var delaytime: Double = _
+    var ampBus: ControlInstrument = _
+
+    def delay(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double): SelfType = {
+      this.inBus = inBus
+      this.ampBus = ampBus
+      this.delaytime = delayTime
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(ampBus.graph(inBus.graph(parent)))
+
+    def getInputBus(startTime: Double, durationFallback: Double): Int =
+      this.inBus.getOutputBus.dynamicBus(startTime,
+        startTime + inBus.optionalDur.getOrElse(durationFallback), nrOfChannels)
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      Seq("in", getInputBus(startTime, duration),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+          startTime + ampBus.optionalDur.getOrElse(duration)),
+        "delaytime", delaytime)
     }
   }
 
@@ -604,9 +759,7 @@ object ModularSynth {
 
     override def self(): SelfType = this
 
-    override def getInputBus(startTime: Double, durationFallback: Double): Int =
-      this.inBus.getOutputBus.dynamicBus(startTime,
-        startTime + inBus.optionalDur.getOrElse(durationFallback))
+    val nrOfChannels: Int = 1
 
     override val instrumentName: String = "monoDelay"
   }
@@ -616,76 +769,122 @@ object ModularSynth {
 
     override def self(): SelfType = this
 
-    override def getInputBus(startTime: Double, durationFallback: Double): Int =
-      this.inBus.getOutputBus.dynamicBus(startTime,
-        startTime + inBus.optionalDur.getOrElse(durationFallback), nrOfChannels = 2)
+    val nrOfChannels: Int = 2
 
     override val instrumentName: String = "stereoDelay"
   }
 
-  class Reverb extends AudioInstrument {
-    override type SelfType = Reverb
+  class StereoChainAllpass extends AudioInstrument {
+    var inBus: AudioInstrument = _
+    var minDelaytime: Double = _
+    var maxDelaytime: Double = _
+    var decaytime: Double = _
+    var ampBus: ControlInstrument = _
+
+    override type SelfType = StereoChainAllpass
 
     override def self(): SelfType = this
 
-    override val instrumentName: String = "reverb"
+    val nrOfChannels: Int = 2
 
-    var inBus: AudioInstrument = _
-    var predelay: Double = _
-    var wet: Double = _
-    var combdelay: Double = _
-    var combdecay: Double = _
-    var allpassdelay: Double = _
-    var allpassdecay: Double = _
+    override val instrumentName: String = "stereoChainAllpass"
 
-    def reverb(inBus: AudioInstrument, preDelay: Double, wet: Double, combDelay: Double, combDecay: Double, allpassDelay: Double, allpassDecay: Double): SelfType = {
+    def allpass(inBus: AudioInstrument, ampBus: ControlInstrument, minDelayTime: Double, maxDelayTime: Double, decayTime: Double): SelfType = {
       this.inBus = inBus
-      this.predelay = preDelay
-      this.wet = wet
-      this.combdelay = combDelay
-      this.combdecay = combDecay
-      this.allpassdelay = allpassDelay
-      this.allpassdecay = allpassDecay
+      this.ampBus = ampBus
+      this.minDelaytime = minDelaytime
+      this.maxDelaytime = maxDelaytime
+      this.decaytime = decayTime
       self()
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
-      appendToGraph(inBus.graph(parent))
+      appendToGraph(ampBus.graph(inBus.graph(parent)))
 
     def getInputBus(startTime: Double, durationFallback: Double): Int =
       this.inBus.getOutputBus.dynamicBus(startTime,
-        startTime + inBus.optionalDur.getOrElse(durationFallback),
-        2)
+        startTime + inBus.optionalDur.getOrElse(durationFallback), nrOfChannels = nrOfChannels)
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
-      Seq("in", getInputBus(startTime, durationFallback),
-        "predelay", predelay,
-        "wet", wet,
-        "combdelay", combdelay,
-        "combdecay", combdecay,
-        "allpassdelay", allpassdelay,
-        "allpassdecay", allpassdecay)
+      Seq("in", getInputBus(startTime, duration),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+          startTime + ampBus.optionalDur.getOrElse(duration)),
+        "minDelaytime", minDelaytime,
+        "maxDelaytime", maxDelaytime,
+        "decaytime", decaytime)
     }
   }
 
-  class ConvolutionReverb extends AudioInstrument {
+  abstract class Allpass extends AudioInstrument {
+    var inBus: AudioInstrument = _
+    var delaytime: Double = _
+    var decaytime: Double = _
+    var ampBus: ControlInstrument = _
 
-    override type SelfType = ConvolutionReverb
+    def allpass(inBus: AudioInstrument, ampBus: ControlInstrument, delayTime: Double, decayTime: Double): SelfType = {
+      this.inBus = inBus
+      this.ampBus = ampBus
+      this.delaytime = delayTime
+      this.decaytime = decayTime
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(ampBus.graph(inBus.graph(parent)))
+
+    def getInputBus(startTime: Double, durationFallback: Double): Int =
+      this.inBus.getOutputBus.dynamicBus(startTime,
+        startTime + inBus.optionalDur.getOrElse(durationFallback), nrOfChannels)
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      Seq("in", getInputBus(startTime, duration),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+          startTime + ampBus.optionalDur.getOrElse(duration)),
+        "delaytime", delaytime,
+        "decaytime", decaytime)
+    }
+  }
+
+  class MonoAllpass extends Allpass {
+    override type SelfType = MonoAllpass
 
     override def self(): SelfType = this
 
-    override val instrumentName: String = "stereoConvolutionReverb"
+    val nrOfChannels: Int = 1
+
+    override val instrumentName: String = "monoAllpass"
+  }
+
+  class StereoAllpass extends Allpass {
+    override type SelfType = StereoAllpass
+
+    override def self(): SelfType = this
+
+    val nrOfChannels: Int = 2
+
+    override val instrumentName: String = "stereoAllpass"
+  }
+
+  class StereoConvolutionReverb extends AudioInstrument {
+
+    override type SelfType = StereoConvolutionReverb
+
+    override def self(): SelfType = this
+
+    val instrumentName: String = "stereoConvolutionReverb"
+
+    val nrOfChannels: Int = 2
 
     var inBus: AudioInstrument = _
+    var ampBus: ControlInstrument = _
     var irLeftBus: Int = _
     var irRightBus: Int = _
     var amp: Double = _
     var fftSize: Int = _
 
-    def reverb(inBus: AudioInstrument, irLeftBus: Int, irRightBus: Int, amp: Double = 1.0, fftSize: Int = 2048): SelfType = {
+    def reverb(inBus: AudioInstrument, ampBus: ControlInstrument, irLeftBus: Int, irRightBus: Int, amp: Double = 1.0, fftSize: Int = 2048): SelfType = {
       this.inBus = inBus
+      this.ampBus = ampBus
       this.irLeftBus = irLeftBus
       this.irRightBus = irRightBus
       this.amp = amp
@@ -694,7 +893,7 @@ object ModularSynth {
     }
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
-      appendToGraph(inBus.graph(parent))
+      appendToGraph(ampBus.graph(inBus.graph(parent)))
 
     def getInputBus(startTime: Double, durationFallback: Double): Int =
       this.inBus.getOutputBus.dynamicBus(startTime,
@@ -705,10 +904,126 @@ object ModularSynth {
       val durationFallback: Double = duration
 
       Seq("in", getInputBus(startTime, durationFallback),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+          startTime + ampBus.optionalDur.getOrElse(duration)),
         "fftSize", fftSize,
         "irLeft", irLeftBus,
         "irRight", irRightBus,
         "amp", amp)
+    }
+  }
+
+
+  class StereoHallReverb extends AudioInstrument {
+    override type SelfType = StereoHallReverb
+
+    override def self(): SelfType = this
+
+    val instrumentName: String = "stereoHallReverb"
+
+    val nrOfChannels: Int = 2
+
+    var inBus: AudioInstrument = _
+    var ampBus: ControlInstrument = _
+
+    var rt60: Double = _
+    var stereo: Double = _
+    var lowFreq: Double = _
+    var lowRatio: Double = _
+    var hiFreq: Double = _
+    var hiRatio: Double = _
+    var earlyDiffusion: Double = _
+    var lateDiffusion: Double = _
+    var modRate: Double = _
+    var modDepth: Double = _
+
+    def reverb(inBus: AudioInstrument, ampBus: ControlInstrument, rt60: Double, stereo: Double, lowFreq: Double, lowRatio: Double,
+               hiFreq: Double, hiRatio: Double, earlyDiffusion: Double, lateDiffusion: Double,
+               modRate: Double, modDepth: Double): SelfType = {
+      this.inBus = inBus
+      this.ampBus = ampBus
+      this.rt60 = rt60
+      this.stereo = stereo
+      this.lowFreq = lowFreq
+      this.lowRatio = lowRatio
+      this.hiFreq = hiFreq
+      this.hiRatio = hiRatio
+      this.earlyDiffusion = earlyDiffusion
+      this.lateDiffusion = lateDiffusion
+      this.modRate = modRate
+      this.modDepth = modDepth
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(ampBus.graph(inBus.graph(parent)))
+
+    def getInputBus(startTime: Double, durationFallback: Double): Int =
+      this.inBus.getOutputBus.dynamicBus(startTime,
+        startTime + inBus.optionalDur.getOrElse(durationFallback),
+        2)
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
+
+      Seq("in", getInputBus(startTime, durationFallback),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+          startTime + ampBus.optionalDur.getOrElse(duration)),
+        "rt60", rt60,
+        "stereo", stereo,
+        "lowFreq", lowFreq,
+        "lowRatio", lowRatio,
+        "hiFreq", hiFreq,
+        "hiRatio", hiRatio,
+        "earlyDiffusion", earlyDiffusion,
+        "lateDiffusion", lateDiffusion,
+        "modRate", modRate,
+        "modDepth", modDepth)
+    }
+  }
+
+  class StereoFreeReverb extends AudioInstrument {
+    override type SelfType = StereoFreeReverb
+
+    override def self(): SelfType = this
+
+    val instrumentName: String = "stereoFreeReverb"
+
+    val nrOfChannels: Int = 2
+
+    var inBus: AudioInstrument = _
+    var ampBus: ControlInstrument = _
+
+    var mix: Double = _
+    var room: Double = _
+    var damp: Double = _
+
+    def reverb(inBus: AudioInstrument, ampBus: ControlInstrument, mix: Double, room: Double, damp: Double): SelfType = {
+      this.inBus = inBus
+      this.ampBus = ampBus
+      this.mix = mix
+      this.room = room
+      this.damp = damp
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(ampBus.graph(inBus.graph(parent)))
+
+    def getInputBus(startTime: Double, durationFallback: Double): Int =
+      this.inBus.getOutputBus.dynamicBus(startTime,
+        startTime + inBus.optionalDur.getOrElse(durationFallback),
+        2)
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      val durationFallback: Double = duration
+
+      Seq("in", getInputBus(startTime, durationFallback),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+          startTime + ampBus.optionalDur.getOrElse(duration)),
+        "mix", mix,
+        "room", room,
+        "damp", damp)
     }
   }
 
@@ -718,7 +1033,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "xfade"
-
+    val nrOfChannels: Int = 1
     var in1Bus: AudioInstrument = _
     var in2Bus: AudioInstrument = _
     var xfadeBus: ControlInstrument = _
@@ -734,8 +1049,6 @@ object ModularSynth {
       appendToGraph(in1Bus.graph(in2Bus.graph(xfadeBus.graph(parent))))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in1", in1Bus.getOutputBus.dynamicBus(startTime,
             startTime + in1Bus.optionalDur.getOrElse(duration)),
@@ -750,6 +1063,7 @@ object ModularSynth {
   abstract class OneChannel extends AudioInstrument {
     var inBus: AudioInstrument = _
     var ampBus: ControlInstrument = _
+    val nrOfChannels: Int = 1
 
     def oneChannel(inBus: AudioInstrument, ampBus: ControlInstrument): SelfType = {
       this.inBus = inBus
@@ -761,8 +1075,6 @@ object ModularSynth {
       appendToGraph(ampBus.graph(inBus.graph(parent)))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in", inBus.getOutputBus.dynamicBus(startTime,
             startTime + inBus.optionalDur.getOrElse(duration)),
@@ -790,6 +1102,8 @@ object ModularSynth {
 
     val instrumentName: String = "mix"
 
+    val nrOfChannels: Int = 1
+
     var in1Bus: AudioInstrument = _
     var in2Bus: AudioInstrument = _
     var ampBus: ControlInstrument = _
@@ -805,7 +1119,6 @@ object ModularSynth {
       appendToGraph(ampBus.graph(in1Bus.graph(in2Bus.graph(parent))))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
 
       Seq(
         "in1", in1Bus.getOutputBus.dynamicBus(startTime,
@@ -818,12 +1131,60 @@ object ModularSynth {
     }
   }
 
+
+  abstract class Volume extends AudioInstrument {
+    var inBus: AudioInstrument = _
+    var ampBus: ControlInstrument = _
+
+    def volume(inBus: AudioInstrument, ampBus: ControlInstrument): SelfType = {
+      this.inBus = inBus
+      this.ampBus = ampBus
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(ampBus.graph(inBus.graph(parent)))
+
+    def getInputBus(startTime: Double, durationFallback: Double): Int =
+      this.inBus.getOutputBus.dynamicBus(startTime,
+        startTime + inBus.optionalDur.getOrElse(durationFallback), nrOfChannels)
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      Seq(
+        "in", getInputBus(startTime, duration),
+        "ampBus", ampBus.getOutputBus.dynamicBus(startTime,
+          startTime + ampBus.optionalDur.getOrElse(duration)))
+    }
+  }
+
+  class MonoVolume extends Volume {
+    type SelfType = MonoVolume
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "monoVolume"
+
+    val nrOfChannels: Int = 1
+  }
+
+
+  class StereoVolume extends Volume {
+    type SelfType = StereoVolume
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "stereoVolume"
+
+    val nrOfChannels: Int = 2
+  }
+
   class Expand extends AudioInstrument {
     type SelfType = Expand
 
     def self(): SelfType = this
 
     val instrumentName: String = "expand"
+    val nrOfChannels: Int = 2
 
     var leftInBus: AudioInstrument = _
     var rightInBus: AudioInstrument = _
@@ -838,8 +1199,6 @@ object ModularSynth {
       appendToGraph(leftInBus.graph(rightInBus.graph(parent)))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "leftIn", leftInBus.getOutputBus.dynamicBus(startTime,
             startTime + leftInBus.optionalDur.getOrElse(duration)),
@@ -854,7 +1213,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "triangleOsc"
-
+    val nrOfChannels: Int = 1
     var ampBus: ControlInstrument = _
     var freqBus: ControlInstrument = _
 
@@ -881,7 +1240,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "pulseOsc"
-
+    val nrOfChannels: Int = 1
     var ampBus: ControlInstrument = _
     var freqBus: ControlInstrument = _
 
@@ -908,7 +1267,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "sawOsc"
-
+    val nrOfChannels: Int = 1
     var ampBus: ControlInstrument = _
     var freqBus: ControlInstrument = _
 
@@ -935,7 +1294,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "sineOsc"
-
+    val nrOfChannels: Int = 1
     var ampBus: ControlInstrument = _
     var freqBus: ControlInstrument = _
 
@@ -962,7 +1321,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "whiteNoiseOsc"
-
+    val nrOfChannels: Int = 1
     var ampBus: ControlInstrument = _
 
     def whiteNoise(ampBus: ControlInstrument): SelfType = {
@@ -985,7 +1344,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "pinkNoiseOsc"
-
+    val nrOfChannels: Int = 1
     var ampBus: ControlInstrument = _
 
     def pinkNoise(ampBus: ControlInstrument): SelfType = {
@@ -1008,7 +1367,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "dustOsc"
-
+    val nrOfChannels: Int = 1
     var ampBus: ControlInstrument = _
     var freqBus: ControlInstrument = _
 
@@ -1035,7 +1394,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "moogFilter"
-
+    val nrOfChannels: Int = 1
     var inBus: AudioInstrument = _
     var freqBus: ControlInstrument = _
     var gainBus: ControlInstrument = _
@@ -1051,8 +1410,6 @@ object ModularSynth {
       appendToGraph(inBus.graph(freqBus.graph(gainBus.graph(parent))))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Object] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in", inBus.getOutputBus.dynamicBus(startTime,
             startTime + inBus.optionalDur.getOrElse(duration)),
@@ -1069,7 +1426,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "resonantFilter"
-
+    val nrOfChannels: Int = 1
     var inBus: AudioInstrument = _
     var freqBus: ControlInstrument = _
     var decayBus: ControlInstrument = _
@@ -1085,8 +1442,6 @@ object ModularSynth {
       appendToGraph(inBus.graph(freqBus.graph(decayBus.graph(parent))))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in", inBus.getOutputBus.dynamicBus(startTime,
             startTime + inBus.optionalDur.getOrElse(duration)),
@@ -1103,7 +1458,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "highPassFilter"
-
+    val nrOfChannels: Int = 1
     var inBus: AudioInstrument = _
     var freqBus: ControlInstrument = _
 
@@ -1117,7 +1472,6 @@ object ModularSynth {
       appendToGraph(inBus.graph(freqBus.graph(parent)))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
 
       Seq(
         "in", inBus.getOutputBus.dynamicBus(startTime,
@@ -1133,7 +1487,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "lowPassFilter"
-
+    val nrOfChannels: Int = 1
     var inBus: AudioInstrument = _
     var freqBus: ControlInstrument = _
 
@@ -1147,8 +1501,6 @@ object ModularSynth {
       appendToGraph(inBus.graph(freqBus.graph(parent)))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Object] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in", inBus.getOutputBus.dynamicBus(startTime,
             startTime + inBus.optionalDur.getOrElse(duration)),
@@ -1163,7 +1515,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "bandPassFilter"
-
+    val nrOfChannels: Int = 1
     var inBus: AudioInstrument = _
     var freqBus: ControlInstrument = _
     var rqBus: ControlInstrument = _
@@ -1179,8 +1531,6 @@ object ModularSynth {
       appendToGraph(inBus.graph(freqBus.graph(rqBus.graph(parent))))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in", inBus.getOutputBus.dynamicBus(startTime,
             startTime + inBus.optionalDur.getOrElse(duration)),
@@ -1197,6 +1547,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "bandRejectFilter"
+    val nrOfChannels: Int = 1
 
     var inBus: AudioInstrument = _
     var freqBus: ControlInstrument = _
@@ -1213,8 +1564,6 @@ object ModularSynth {
       appendToGraph(inBus.graph(freqBus.graph(rqBus.graph(parent))))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in", inBus.getOutputBus.dynamicBus(startTime,
           startTime + inBus.optionalDur.getOrElse(duration)),
@@ -1231,6 +1580,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "ringModulate"
+    val nrOfChannels: Int = 1
 
     var carrierBus: AudioInstrument = _
     var modulatorFreqBus: ControlInstrument = _
@@ -1245,13 +1595,75 @@ object ModularSynth {
       appendToGraph(carrierBus.graph(modulatorFreqBus.graph(parent)))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "carrierBus", carrierBus.getOutputBus.dynamicBus(startTime,
             startTime + carrierBus.optionalDur.getOrElse(duration)),
         "modulatorFreqBus", modulatorFreqBus.getOutputBus.dynamicBus(startTime,
             startTime + modulatorFreqBus.optionalDur.getOrElse(duration)))
+    }
+  }
+
+  class BankOfResonators extends AudioInstrument {
+    type SelfType = BankOfResonators
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "bankOfResonators"
+    val nrOfChannels: Int = 1
+
+    var inBus: AudioInstrument = _
+    var freqs: Seq[Double] = _
+    var amps: Seq[Double] = _
+    var ringTimes: Seq[Double] = _
+
+    def bankOfResonators(inBus: AudioInstrument, freqs: Seq[Double], amps: Seq[Double], ringTimes: Seq[Double]): SelfType = {
+      this.inBus = inBus
+      this.freqs = freqs
+      this.amps = amps
+      this.ringTimes = ringTimes
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(inBus.graph(parent))
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      Seq(
+        "in", inBus.getOutputBus.dynamicBus(startTime,
+          startTime + inBus.optionalDur.getOrElse(duration)),
+        "freqs", freqs,
+        "amps", amps,
+        "ringTimes", ringTimes)
+    }
+  }
+
+  class BankOfOsc extends AudioInstrument {
+    type SelfType = BankOfOsc
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "bankOfOsc"
+    val nrOfChannels: Int = 1
+
+    var freqs: Seq[Double] = _
+    var amps: Seq[Double] = _
+    var phases: Seq[Double] = _
+
+    def bankOfOsc(freqs: Seq[Double], amps: Seq[Double], phases: Seq[Double]): SelfType = {
+      this.freqs = freqs
+      this.amps = amps
+      this.phases = phases
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      appendToGraph(parent)
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
+      Seq(
+        "freqs", freqs,
+        "amps", amps,
+        "phases", phases)
     }
   }
 
@@ -1261,6 +1673,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "amModulate"
+    val nrOfChannels: Int = 1
 
     var carrierBus: AudioInstrument = _
     var modulatorFreqBus: ControlInstrument = _
@@ -1275,8 +1688,6 @@ object ModularSynth {
       appendToGraph(carrierBus.graph(modulatorFreqBus.graph(parent)))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "carrierBus", carrierBus.getOutputBus.dynamicBus(startTime,
             startTime + carrierBus.optionalDur.getOrElse(duration)),
@@ -1291,6 +1702,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "frequencyShift"
+    val nrOfChannels: Int = 1
 
     var carrierBus: AudioInstrument = _
     var modulatorFreqBus: ControlInstrument = _
@@ -1319,6 +1731,7 @@ object ModularSynth {
     def self(): SelfType = this
 
     val instrumentName: String = "bitCrushing"
+    val nrOfChannels: Int = 1
 
     var inBus: AudioInstrument = _
     var amountBus: ControlInstrument = _
@@ -1333,8 +1746,6 @@ object ModularSynth {
       appendToGraph(inBus.graph(amountBus.graph(parent)))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Object] = {
-      val durationFallback: Double = duration
-
       Seq(
         "in", inBus.getOutputBus.dynamicBus(startTime,
           startTime + inBus.optionalDur.getOrElse(duration)),
@@ -1347,6 +1758,7 @@ object ModularSynth {
     var carrierFreqBus: ControlInstrument = _
     var modulatorBus: AudioInstrument = _
     var ampBus: ControlInstrument = _
+    val nrOfChannels: Int = 1
 
     def modulate(carrierFreqBus: ControlInstrument, modulatorBus: AudioInstrument,
                  ampBus: ControlInstrument): SelfType = {
@@ -1360,8 +1772,6 @@ object ModularSynth {
       appendToGraph(carrierFreqBus.graph(modulatorBus.graph(ampBus.graph(parent))))
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = {
-      val durationFallback: Double = duration
-
       Seq(
         "carrierFreqBus", carrierFreqBus.getOutputBus.dynamicBus(startTime,
             startTime + carrierFreqBus.optionalDur.getOrElse(duration)),
@@ -1438,12 +1848,14 @@ object ModularSynth {
     type SelfType = MonoPlayBuffer
     def self(): SelfType = this
     val instrumentName: String = "monoPlayBuffer"
+    val nrOfChannels: Int = 1
   }
 
   class StereoPlayBuffer extends PlayBuffer {
     type SelfType = StereoPlayBuffer
     def self(): SelfType = this
     val instrumentName: String = "stereoPlayBuffer"
+    val nrOfChannels: Int = 2
   }
   
 }

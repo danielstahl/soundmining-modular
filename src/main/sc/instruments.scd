@@ -38,6 +38,13 @@ SynthDef(\xlineControl, {
 	Out.kr(out, xlineEnv);
 }).add.store('global', synthsDir);
 
+SynthDef(\sineControl, {
+	arg dur = 1, startValue = 1, peakValue = 1, out = 0;
+	var sineEnv;
+	sineEnv = EnvGen.kr(Env.sine(dur: dur, level: 1, dur: dur), doneAction:2).linlin(0, 1, startValue, peakValue);
+	Out.kr(out, sineEnv);
+}).add.store('global', synthsDir);
+
 SynthDef(\percControl, {
 	arg dur = 1, attackTime = 0.01, curve = -4, startValue = 1, peakValue = 1, out = 0;
 	var percEnv;
@@ -46,7 +53,7 @@ SynthDef(\percControl, {
 	Out.kr(out, percEnv);
 }).add.store('global', synthsDir);
 
-SynthDef(\sineControl, {
+SynthDef(\sineOscControl, {
 	arg dur = 1, freqBus = 0, minValue = 1, maxValue = 1, out = 0;
 	var freq, sig;
 	Line.kr(dur:dur, doneAction:2);
@@ -230,6 +237,26 @@ SynthDef(\mix, {
 	Out.ar(out, result * amp);
 }).add.store('global', synthsDir);
 
+SynthDef(\monoVolume, {
+	arg dur = 1, in = 0, out = 0, ampBus = 0;
+	var input, amp;
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	input = In.ar(in, 1);
+
+	Out.ar(out, input * amp);
+}).add.store('global', synthsDir);
+
+SynthDef(\stereoVolume, {
+	arg dur = 1, in = 0, out = 0, ampBus = 0;
+	var input, amp;
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	input = In.ar(in, 2);
+
+	Out.ar(out, input * amp);
+}).add.store('global', synthsDir);
+
 SynthDef(\expand, {
 	arg dur = 1, leftIn = 0, rightIn = 0, out = 0;
 	var leftInput, rightInput´;
@@ -239,6 +266,16 @@ SynthDef(\expand, {
 
 	Out.ar(out, [leftInput, rightInput]);
 }).add.store('global', synthsDir);
+
+
+/*
+stereoSplit
+-- take one stereoSignal and send it to two stereo buses
+stereoMix
+-- take two stereoSignals and mix it into one stereo signal. Use XFade2
+stereoBalance
+-- take one stereoSignal and re-pan it.
+*/
 
 SynthDef(\moogFilter, {
 	arg dur = 1, in = 0, freqBus = 0, gainBus = 0, out = 0;
@@ -313,6 +350,27 @@ SynthDef(\ringModulate, {
 	sig = carrier * SinOsc.ar(modulatorFreq, 0, 0.5);
 	Out.ar(out, sig);
 }).add.store('global', synthsDir);
+
+SynthDef(\bankOfResonators, {
+	arg dur = 1, in = 0, freqs = #[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	amps = #[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	ringTimes = #[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], out = 0;
+	var input, sig;
+	Line.kr(dur:dur, doneAction:2);
+	input = In.ar(in, 1);
+	sig = Klank.ar(`[freqs, amps, ringTimes ], input);
+	Out.ar(out, sig);
+}).add.store('global', synthsDir );
+
+SynthDef(\bankOfOsc, {
+	arg dur = 1, freqs = #[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	amps = #[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	phases = #[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], out = 0;
+	var sig;
+	Line.kr(dur:dur, doneAction:2);
+	sig = Klang.ar(`[freqs, amps, phases ]);
+	Out.ar(out, sig);
+}).add.store('global', synthsDir );
 
 SynthDef(\amModulate, {
 	arg dur = 1, carrierBus = 0, modulatorFreqBus = 0, out = 0;
@@ -439,7 +497,8 @@ SynthDef(\splay, {
 	Out.ar(out, Splay.ar(input, spread, level, center));
 }).add.store('global', synthsDir);
 
-SynthDef(\monoDelay, {
+
+SynthDef(\monoComb, {
 	arg dur = 1, in = 0, out = 0, delaytime = 0.2, decaytime = 1, ampBus = 0;
 	var input, delaySig, amp;
 	Line.kr(dur:dur, doneAction:2);
@@ -450,7 +509,7 @@ SynthDef(\monoDelay, {
 	Out.ar(out, delaySig);
 }).add.store('global', synthsDir);
 
-SynthDef(\stereoDelay, {
+SynthDef(\stereoComb, {
 	arg dur = 1, in = 0, out = 0, delaytime = 0.2, decaytime = 1, ampBus = 0;
 	var input, delaySig, amp;
 	Line.kr(dur:dur, doneAction:2);
@@ -461,31 +520,108 @@ SynthDef(\stereoDelay, {
 	Out.ar(out, delaySig);
 }).add.store('global', synthsDir);
 
-SynthDef(\reverb, {
-	arg in = 0, predelay = 0.048, wet = 0.2, combdelay = 0.1, combdecay = 5, allpassdelay = 0.05, allpassdecay = 1;
-	var sig, input;
+SynthDef(\stereoParallelComb, {
+	arg dur = 1, in = 0, out = 0, minDelaytime = 0.01, maxDelaytime = 0.1, decayTime = 5, ampBus = 0;
+	var input, sig, amp;
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	input = In.ar(in, 2);
+	// 32 prallel comb filters
+	sig = CombN.ar(input, maxDelaytime, {Rand(minDelaytime, maxDelaytime)}!32, decayTime);
+	// mix it down to 2 channels and spread them over the stereo field
+	sig = SplayAz.ar(2, sig);
+	Out.ar(out, sig * amp);
+}).add.store('global', synthsDir);
 
-	input = input=In.ar(in,2);
-	// Predelay
-	sig = DelayN.ar(input, predelay);
+SynthDef(\monoDelay, {
+	arg dur = 1, in = 0, out = 0, delaytime = 0.2, ampBus = 0;
+	var input, delaySig, amp;
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	input = In.ar(in, 1);
+	delaySig = DelayL.ar(input, delaytime, delaytime, mul:amp);
 
-	// 7 Comb filters
-	sig = Mix.fill(7, {CombL.ar(sig, combdelay, Rand(0.01, combdelay), combdecay)});
-	// 4 Allpass
-	4.do({ sig = AllpassN.ar(sig, allpassdelay + 0.001, [Rand(0.01, allpassdelay), Rand(0.01, allpassdelay)], allpassdecay) });
+	Out.ar(out, delaySig);
+}).add.store('global', synthsDir);
 
-	Out.ar(0, input + (sig * wet));
+SynthDef(\stereoDelay, {
+	arg dur = 1, in = 0, out = 0, delaytime = 0.2, decaytime = 1, ampBus = 0;
+	var input, delaySig, amp;
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	input = In.ar(in, 2);
+	delaySig = DelayL.ar(input, delaytime, delaytime, mul:amp);
+
+	Out.ar(out, delaySig);
+}).add.store('global', synthsDir);
+
+SynthDef(\monoAllpass, {
+	arg dur = 1, in = 0, out = 0, delaytime = 0.2, decaytime = 1, ampBus = 0;
+	var input, delaySig, amp;
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	input = In.ar(in, 1);
+	delaySig = AllpassL.ar(input, delaytime, delaytime, decaytime, mul:amp);
+
+	Out.ar(out, delaySig);
+}).add.store('global', synthsDir);
+
+SynthDef(\stereoAllpass, {
+	arg dur = 1, in = 0, out = 0, delaytime = 0.2, decaytime = 1, ampBus = 0;
+	var input, delaySig, amp;
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	input = In.ar(in, 2);
+	delaySig = AllpassL.ar(input, delaytime, delaytime, decaytime, mul:amp);
+
+	Out.ar(out, delaySig);
+}).add.store('global', synthsDir);
+
+SynthDef(\stereoChainAllpass, {
+	arg dur = 1, in = 0, out = 0, minDelaytime = 0.001, maxDelaytime = 0.05, decayTime = 3, ampBus = 0;
+	var input, sig, amp;
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	input = In.ar(in, 2);
+	sig = input;
+	4.do({ sig = AllpassN.ar(sig, maxDelaytime, {Rand(minDelaytime, maxDelaytime)}!2, decayTime) });
+	Out.ar(out, sig * amp);
 }).add.store('global', synthsDir);
 
 SynthDef(\stereoConvolutionReverb, {
-	arg dur = 1, fftSize=2048, in, out=0, irLeft, irRight, amp=1.0;
-	var input, output;
+	arg dur = 1, fftSize=2048, in = 0, out=0, ampBus = 0, irLeft, irRight, amp=1.0;
+	var input, output, ampControl;
 
 	Line.kr(dur:dur, doneAction:2);
+	ampControl = In.kr(ampBus, 1);
 	input = In.ar(in, 2);
 
 	output = PartConv.ar(input, fftSize, [irLeft, irRight], amp);
-	Out.ar(out, output);
+	Out.ar(out, output * amp);
+}).add.store('global', synthsDir);
+
+SynthDef(\stereoHallReverb, {
+	arg dur = 1, in = 0, out=0, ampBus = 0, rt60=1, stereo=0.5, lowFreq=200, lowRatio=0.5, hiFreq=4000, hiRatio=0.5, earlyDiffusion=0.5, lateDiffusion=0.5, modRate=0.2, modDepth=0.3;
+	var input, output, amp;
+
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	input = In.ar(in, 2);
+
+	output = NHHall.ar(input, rt60, stereo, lowFreq, lowRatio, hiFreq, hiRatio, earlyDiffusion, lateDiffusion, modRate, modDepth);
+	Out.ar(out, output * amp);
+}).add.store('global', synthsDir);
+
+SynthDef(\stereoFreeReverb, {
+	arg dur = 1, in = 0, out=0, ampBus = 0, mix=0.33, room=0.5, damp=0.5;
+	var input, output, amp;
+
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	input = In.ar(in, 2);
+
+	output = FreeVerb.ar(input, mix, room, damp);
+	Out.ar(out, output * amp);
 }).add.store('global', synthsDir);
 
 SynthDef(\stereoPlayBuffer, {

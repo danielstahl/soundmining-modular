@@ -2,8 +2,8 @@ package net.soundmining.modular
 
 import net.soundmining.modular.ModularInstrument.ControlInstrument
 import net.soundmining.modular.ModularSynth.staticControl
-import net.soundmining.synth.SuperColliderClient
-import net.soundmining.synth.SuperColliderClient.allocRead
+import net.soundmining.synth.{SuperColliderClient, SuperColliderScore}
+import net.soundmining.synth.SuperColliderClient.{allocRead, freeBuffer}
 
 object BufNumAllocator {
   var bufNum = 0
@@ -50,4 +50,13 @@ case class SoundPlay(soundPath: String, start: Double, end: Double,
     bufNum = BufNumAllocator.next()
     client.send(allocRead(bufNum, soundPath))
   }
+
+  def initScore(superColliderScore: SuperColliderScore): Unit = {
+    bufNum = BufNumAllocator.next()
+    superColliderScore.addMessage(0, allocRead(bufNum, soundPath))
+  }
+
+  def stop(implicit client: SuperColliderClient): Unit =
+    client.send(freeBuffer(bufNum))
+
 }

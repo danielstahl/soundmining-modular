@@ -73,6 +73,8 @@ object ModularInstrument {
     val id: String = UUID.randomUUID().toString
     val instrumentName: String
 
+    val nrOfChannels: Int
+
     var addAction: AddAction = HEAD_ACTION
 
     def addAction(value: AddAction): SelfType = {
@@ -91,13 +93,6 @@ object ModularInstrument {
 
     def withDur(value: Double): SelfType = {
       optionalDur = Option(value)
-      self()
-    }
-
-    var nrOfChannels: Int = 1
-
-    def withNrOfChannels(value: Int): SelfType = {
-      nrOfChannels = value
       self()
     }
 
@@ -186,21 +181,36 @@ object ModularInstrument {
     var bus = new ControlBus
     override def getOutputBus: ControlBus = bus
 
+    val nrOfChannels: Int = 1
+
     override def withOutput(output: ControlInstrument): SelfType = {
       this.bus = output.getOutputBus
       self()
     }
   }
 
-  class StaticAudioBusInstrument extends AudioInstrument {
-    override type SelfType = StaticAudioBusInstrument
-
-    override def self(): SelfType = this
-
+  abstract class StaticAudioBusInstrument extends AudioInstrument {
     override val instrumentName: String = "NONE"
 
     override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] = parent
 
     override def internalBuild(startTime: Double, duration: Double): Seq[Any] = Seq.empty
+  }
+
+
+  class StaticMonoAudioBusInstrument extends StaticAudioBusInstrument {
+    override type SelfType = StaticMonoAudioBusInstrument
+
+    override def self(): SelfType = this
+
+    override val nrOfChannels: Int = 1
+  }
+
+  class StaticStereoAudioBusInstrument extends StaticAudioBusInstrument {
+    override type SelfType = StaticStereoAudioBusInstrument
+
+    override def self(): SelfType = this
+
+    override val nrOfChannels: Int = 2
   }
 }

@@ -8,13 +8,24 @@ import net.soundmining.synth.Utils.absoluteTimeToMillis
 
 import scala.collection.mutable
 
-case class SynthPlayer(soundPlays: Map[String, SoundPlay], masterVolume: Double = 1.0, numberOfOutputBuses: Int = 2)(implicit val client: SuperColliderClient = SuperColliderClient()) {
+case class SynthPlayer(soundPlays: Map[String, SoundPlay], masterVolume: Double = 1.0, numberOfOutputBuses: Int = 2, bufferedPlayback: Boolean = false)(implicit val client: SuperColliderClient = SuperColliderClient()) {
 
   val superColliderScore: SuperColliderScore = SuperColliderScore()
 
   def init(): Unit = {
     BufNumAllocator.reset()
+    superColliderScore.reset()
     soundPlays.values.foreach(_.init)
+  }
+
+  def initScore(): Unit = {
+    superColliderScore.reset()
+    soundPlays.values.foreach(_.initScore(superColliderScore))
+  }
+
+  def stop(): Unit = {
+    soundPlays.values.foreach(_.stop)
+    BufNumAllocator.reset()
     superColliderScore.reset()
   }
 
@@ -56,7 +67,7 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     soundPlay.foreach {
       sound =>
         audioStack.push(
-          monoPlayBuffer(sound.bufNum, rate, start, end, sound.amp(volume * synthPlayer.masterVolume)).withNrOfChannels(1).addAction(TAIL_ACTION),
+          monoPlayBuffer(sound.bufNum, rate, start, end, sound.amp(volume * synthPlayer.masterVolume)).addAction(TAIL_ACTION),
           sound.duration(rate))
     }
     this
@@ -74,8 +85,8 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     soundPlay.foreach {
       sound =>
         audioStack.push(
-          left(stereoPlayBuffer(sound.bufNum, rate, start, end, sound.amp(volume * synthPlayer.masterVolume))
-            .withNrOfChannels(2), staticControl(1))
+          left(stereoPlayBuffer(sound.bufNum, rate, start, end, sound.amp(volume * synthPlayer.masterVolume)),
+            staticControl(1))
             .addAction(TAIL_ACTION),
           sound.duration(rate))
     }
@@ -94,8 +105,8 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     soundPlay.foreach {
       sound =>
         audioStack.push(
-          right(stereoPlayBuffer(sound.bufNum, rate, start, end, sound.amp(volume * synthPlayer.masterVolume))
-            .withNrOfChannels(2), staticControl(1))
+          right(stereoPlayBuffer(sound.bufNum, rate, start, end, sound.amp(volume * synthPlayer.masterVolume)),
+            staticControl(1))
             .addAction(TAIL_ACTION),
           sound.duration(rate))
     }
@@ -112,8 +123,7 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
 
   def expand(): SynthNote = {
     audioStack.push(ModularSynth.expand(audioStack.popInstrument(), audioStack.popInstrument())
-      .addAction(TAIL_ACTION)
-      .withNrOfChannels(2))
+      .addAction(TAIL_ACTION))
     this
   }
 
@@ -164,8 +174,23 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     this
   }
 
+  def sineFm(carrierFreq: ControlInstrument, amp: ControlInstrument): SynthNote = {
+    audioStack.push(fmSineModulate(carrierFreq, audioStack.popInstrument(), amp).addAction(TAIL_ACTION))
+    this
+  }
+
   def pulseFm(carrierFreq: ControlInstrument, modulatorFreq: ControlInstrument, modulatorAmount: ControlInstrument, amp: ControlInstrument): SynthNote = {
     audioStack.push(fmPulseModulate(carrierFreq, sineOsc(modulatorAmount, modulatorFreq), amp).addAction(TAIL_ACTION))
+    this
+  }
+
+  def pulseFm(carrierFreq: ControlInstrument, amp: ControlInstrument): SynthNote = {
+    audioStack.push(fmPulseModulate(carrierFreq, audioStack.popInstrument(), amp).addAction(TAIL_ACTION))
+    this
+  }
+
+  def bankOfOsc(freqs: Seq[Double], amps: Seq[Double], phases: Seq[Double]): SynthNote = {
+    audioStack.push(ModularSynth.bankOfOsc(freqs, amps, phases))
     this
   }
 
@@ -174,13 +199,28 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     this
   }
 
+  def sawFm(carrierFreq: ControlInstrument, amp: ControlInstrument): SynthNote = {
+    audioStack.push(fmSawModulate(carrierFreq, audioStack.popInstrument(), amp).addAction(TAIL_ACTION))
+    this
+  }
+
   def triangleFm(carrierFreq: ControlInstrument, modulatorFreq: ControlInstrument, modulatorAmount: ControlInstrument, amp: ControlInstrument): SynthNote = {
     audioStack.push(fmTriangleModulate(carrierFreq, sineOsc(modulatorAmount, modulatorFreq), amp).addAction(TAIL_ACTION))
     this
   }
 
+  def triangleFm(carrierFreq: ControlInstrument, amp: ControlInstrument): SynthNote = {
+    audioStack.push(fmTriangleModulate(carrierFreq, audioStack.popInstrument(), amp).addAction(TAIL_ACTION))
+    this
+  }
+
   def audioAmplitude(attackTime: Double = 0.01, releaseTime: Double = 0.01): ControlInstrument =
     soundAmplitudeControl(audioStack.popInstrument(), attackTime, releaseTime).addAction(TAIL_ACTION)
+
+  def sineWithAudioAmplitude(freq: ControlInstrument, attackTime: Double = 0.01, releaseTime: Double = 0.01): SynthNote = {
+    sine(audioAmplitude(attackTime, releaseTime), freq)
+    this
+  }
 
 
   def highPass(filterFreq: ControlInstrument): SynthNote = {
@@ -232,6 +272,13 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     this
   }
 
+  def bankOfResonators(freqs: Seq[Double], amps: Seq[Double], ringTimes: Seq[Double]): SynthNote = {
+    audioStack.mapInstrument {
+      audio => ModularSynth.bankOfResonators(audio, freqs, amps, ringTimes).addAction(TAIL_ACTION)
+    }
+    this
+  }
+
   def am(modularFreq: ControlInstrument): SynthNote = {
     audioStack.mapInstrument {
       audio => amModulate(audio, modularFreq).addAction(TAIL_ACTION)
@@ -258,9 +305,37 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     this
   }
 
-  def delay(delayTime: Double, decayTime: Double, amp: ControlInstrument): SynthNote = {
+  def monoComb(delayTime: Double, decayTime: Double, amp: ControlInstrument): SynthNote = {
     audioStack.mapInstrument {
-      audio => ModularSynth.monoDelay(audio, amp, delayTime, decayTime).addAction(TAIL_ACTION)
+      audio => ModularSynth.monoComb(audio, amp, delayTime, decayTime).addAction(TAIL_ACTION)
+    }
+    this
+  }
+
+  def monoAllpass(delayTime: Double, decayTime: Double, amp: ControlInstrument): SynthNote = {
+    audioStack.mapInstrument {
+      audio => ModularSynth.monoAllpass(audio, amp, delayTime, decayTime).addAction(TAIL_ACTION)
+    }
+    this
+  }
+
+  def monoDelay(delayTime: Double, amp: ControlInstrument): SynthNote = {
+    audioStack.mapInstrument {
+      audio => ModularSynth.monoDelay(audio, amp, delayTime).addAction(TAIL_ACTION)
+    }
+    this
+  }
+
+  def monoVolume(amp: ControlInstrument): SynthNote = {
+    audioStack.mapInstrument {
+      audio => ModularSynth.monoVolume(audio, amp).addAction(TAIL_ACTION)
+    }
+    this
+  }
+
+  def stereoVolume(amp: ControlInstrument): SynthNote = {
+    audioStack.mapInstrument {
+      audio => ModularSynth.stereoVolume(audio, amp).addAction(TAIL_ACTION)
     }
     this
   }
@@ -269,22 +344,25 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     audioStack.mapInstrument {
       audio => panning(audio, panPosition)
         .addAction(TAIL_ACTION)
-        .withNrOfChannels(2)
     }
     this
   }
 
-  def playWithDuration(startTime: Double, duration: Double, outputBus: Int = 0, realOutput: Boolean = true): Unit = {
+  private def superColliderPlayback(startTime: Double, duration: Double, outputBus: Int = 0, realOutput: Boolean = true): Unit = {
     val out = if(realOutput) synthPlayer.getRealOutputBus(outputBus) else outputBus
     audioStack.foreachInstrument {
       audio =>
         audio.getOutputBus.staticBus(out)
         val graph = audio.buildGraph(startTime, duration, audio.graph(Seq()))
-        synthPlayer.client.send(synthPlayer.client.newBundle(absoluteTimeToMillis(startTime), graph))
+        if(synthPlayer.bufferedPlayback) {
+          synthPlayer.client.playBundle(absoluteTimeToMillis(startTime), graph)
+        } else {
+          synthPlayer.client.send(synthPlayer.client.newBundle(absoluteTimeToMillis(startTime), graph))
+        }
     }
   }
 
-  def writeToScore(startTime: Double, duration: Double, outputBus: Int = 0): Unit = {
+  private def writeToScore(startTime: Double, duration: Double, outputBus: Int = 0): Unit = {
     val out = outputBus
     audioStack.foreachInstrument {
       audio =>
@@ -295,6 +373,11 @@ case class SynthNote(soundPlay: Option[SoundPlay] = None, synthPlayer: SynthPlay
     }
   }
 
-  def play(startTime: Double, outputBus: Int = 0, realOutput: Boolean = true): Unit =
-    playWithDuration(startTime, audioStack.duration.get, outputBus, realOutput)
+  def playWithDuration(startTime: Double, duration: Double, outputBus: Int = 0, realOutput: Boolean = true, shouldWriteToScore: Boolean = false): Unit = {
+    if(shouldWriteToScore) writeToScore(startTime, duration, outputBus)
+    else superColliderPlayback(startTime, duration, outputBus, realOutput)
+  }
+
+  def play(startTime: Double, outputBus: Int = 0, realOutput: Boolean = true, shouldWriteToScore: Boolean = false): Unit =
+    playWithDuration(startTime, audioStack.duration.get, outputBus, realOutput, shouldWriteToScore)
 }
