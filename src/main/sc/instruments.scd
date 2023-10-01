@@ -92,19 +92,8 @@ SynthDef(\controlSum, {
 	Out.kr(out, result);
 }).add.store('global', synthsDir);
 
-SynthDef(\twoBlockControl, {
-	arg dur = 1, startValue1, len1, startValue2, len2, endValue2, curve = 'lin', out = 0;
-	var twoBlockEnv;
-	twoBlockEnv = EnvGen.kr(
-		Env.new(
-			levels: [startValue1, startValue2, endValue2],
-			times: [len1, len2],
-			curve: curve),
-		doneAction:2);
-	Out.kr(out, twoBlockEnv);
-}).add.store('global', synthsDir);
 
-SynthDef(\threeBlockControl, {
+SynthDef(\threeBlockControlV1, {
 	arg dur = 1, startValue1, len1, startValue2, len2, startValue3, len3, endValue3, curve = 'lin', out = 0;
 	var threeBlockEnv;
 	threeBlockEnv = EnvGen.kr(
@@ -115,6 +104,43 @@ SynthDef(\threeBlockControl, {
 		doneAction:2);
 	Out.kr(out, threeBlockEnv);
 }).add.store('global', synthsDir);
+
+SynthDef(\twoBlockControl, {
+	arg dur = 1, levels = #[0, 0, 0], times = #[0, 0], curves = #[0, 0], out = 0;
+	var env;
+	env = EnvGen.kr(
+		Env.new(
+			levels: levels,
+			times: times,
+			curve: curves).duration_(dur),
+		doneAction:2);
+	Out.kr(out, env);
+}).add.store('global', synthsDir);
+
+SynthDef(\threeBlockControl, {
+	arg dur = 1, levels = #[0, 0, 0, 0], times = #[0, 0, 0], curves = #[0, 0, 0], out = 0;
+	var env;
+	env = EnvGen.kr(
+		Env.new(
+			levels: levels,
+			times: times,
+			curve: curves).duration_(dur),
+		doneAction:2);
+	Out.kr(out, env);
+}).add.store('global', synthsDir);
+
+SynthDef(\fourBlockControl, {
+	arg dur = 1, levels = #[0, 0, 0, 0, 0], times = #[0, 0, 0, 0], curves = #[0, 0, 0, 0], out = 0;
+	var env;
+	env = EnvGen.kr(
+		Env.new(
+			levels: levels,
+			times: times,
+			curve: curves).duration_(dur),
+		doneAction:2);
+	Out.kr(out, env);
+}).add.store('global', synthsDir);
+
 
 SynthDef(\soundAmplitudeControl, {
 	arg dur = 1, in = 0, out = 0, attackTime = 0.01, releaseTime = 0.01;
@@ -299,7 +325,7 @@ SynthDef(\resonantFilter, {
 	Out.ar(out, sig);
 }).add.store('global', synthsDir);
 
-SynthDef(\highPassFilter, {
+SynthDef(\monoHighPassFilter, {
 	arg dur = 1, in = 0, freqBus = 0, out = 0;
 	var input, sig, freq;
 	Line.kr(dur:dur, doneAction:2);
@@ -309,7 +335,17 @@ SynthDef(\highPassFilter, {
 	Out.ar(out, sig);
 }).add.store('global', synthsDir);
 
-SynthDef(\lowPassFilter, {
+SynthDef(\stereoHighPassFilter, {
+	arg dur = 1, in = 0, freqBus = 0, out = 0;
+	var input, sig, freq;
+	Line.kr(dur:dur, doneAction:2);
+	input = In.ar(in, 2);
+	freq = In.kr(freqBus, 1);
+	sig = HPF.ar(input, freq);
+	Out.ar(out, sig);
+}).add.store('global', synthsDir);
+
+SynthDef(\monoLowPassFilter, {
 	arg dur = 1, in = 0, freqBus = 0, out = 0;
 	var input, sig, freq;
 	Line.kr(dur:dur, doneAction:2);
@@ -319,7 +355,17 @@ SynthDef(\lowPassFilter, {
 	Out.ar(out, sig);
 }).add.store('global', synthsDir);
 
-SynthDef(\bandPassFilter, {
+SynthDef(\stereoLowPassFilter, {
+	arg dur = 1, in = 0, freqBus = 0, out = 0;
+	var input, sig, freq;
+	Line.kr(dur:dur, doneAction:2);
+	input = In.ar(in, 2);
+	freq = In.kr(freqBus, 1);
+	sig = LPF.ar(input, freq);
+	Out.ar(out, sig);
+}).add.store('global', synthsDir);
+
+SynthDef(\monoBandPassFilter, {
 	arg dur = 1, in = 0, freqBus = 0, rqBus = 0, out = 0;
 	var input, sig, freq, rq;
 	Line.kr(dur:dur, doneAction:2);
@@ -330,7 +376,29 @@ SynthDef(\bandPassFilter, {
 	Out.ar(out, sig);
 }).add.store('global', synthsDir);
 
-SynthDef(\bandRejectFilter, {
+SynthDef(\stereoBandPassFilter, {
+	arg dur = 1, in = 0, freqBus = 0, rqBus = 0, out = 0;
+	var input, sig, freq, rq;
+	Line.kr(dur:dur, doneAction:2);
+	input = In.ar(in, 2);
+	freq = In.kr(freqBus, 1);
+	rq = In.kr(rqBus, 1);
+	sig = BPF.ar(input, freq, rq);
+	Out.ar(out, sig);
+}).add.store('global', synthsDir);
+
+SynthDef(\monoBandRejectFilter, {
+	arg dur = 1, in = 0, freqBus = 0, rqBus = 0, out = 0;
+	var input, sig, freq, rq;
+	Line.kr(dur:dur, doneAction:2);
+	input = In.ar(in, 1);
+	freq = In.kr(freqBus, 1);
+	rq = In.kr(rqBus, 1);
+	sig = BRF.ar(input, freq, rq);
+	Out.ar(out, sig);
+}).add.store('global', synthsDir);
+
+SynthDef(\stereoBandRejectFilter, {
 	arg dur = 1, in = 0, freqBus = 0, rqBus = 0, out = 0;
 	var input, sig, freq, rq;
 	Line.kr(dur:dur, doneAction:2);
@@ -621,6 +689,19 @@ SynthDef(\stereoFreeReverb, {
 	input = In.ar(in, 2);
 
 	output = FreeVerb.ar(input, mix, room, damp);
+	Out.ar(out, output * amp);
+}).add.store('global', synthsDir);
+
+SynthDef(\stereoGVerb, {
+	arg dur = 1, in = 0, out=0, ampBus = 0, roomsize = 10, revtime = 3, damping = 0.5, inputbw = 0.5, spread =15, drylevel = 1, earlyreflevel = 0.7, taillevel = 0.5;
+	var input, output, amp;
+
+	Line.kr(dur:dur, doneAction:2);
+	amp = In.kr(ampBus, 1);
+	// GVerb takes mono as input
+	input = Mix.new(In.ar(in, 2));
+
+	output = GVerb.ar(input, roomsize:roomsize, revtime:revtime, damping:damping, inputbw:inputbw, spread:spread, drylevel:drylevel, earlyreflevel:earlyreflevel, taillevel:taillevel, maxroomsize:roomsize + 1);
 	Out.ar(out, output * amp);
 }).add.store('global', synthsDir);
 

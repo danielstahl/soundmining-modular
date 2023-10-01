@@ -24,11 +24,20 @@ object ModularSynth {
   def relativePercControl(startValue: Double, peakValue: Double, attackTime: Double, curve: Either[Seq[Double], EnvCurve]): PercControl =
     new RelativePercControl().control(startValue, peakValue, attackTime, curve)
 
-  def threeBlockcontrol(startValue1: Double, len1: Double, startValue2: Double, len2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Seq[Double], EnvCurve]): ThreeBlockControl =
-    new ThreeBlockControl().control(startValue1, len1, startValue2, len2, startValue3, len3, endValue3, curve)
+  def threeBlockcontrolv1(startValue1: Double, len1: Double, startValue2: Double, len2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Seq[Double], EnvCurve]): ThreeBlockControlV1 =
+    new ThreeBlockControlV1().control(startValue1, len1, startValue2, len2, startValue3, len3, endValue3, curve)
 
-  def relativeThreeBlockcontrol(startValue1: Double, len1: Double, startValue2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Seq[Double], EnvCurve]): RelativeThreeBlockControl =
-    new RelativeThreeBlockControl().control(startValue1, len1, startValue2, startValue3, len3, endValue3, curve)
+  def relativeThreeBlockcontrolv1(startValue1: Double, len1: Double, startValue2: Double, startValue3: Double, len3: Double, endValue3: Double, curve: Either[Seq[Double], EnvCurve]): RelativeThreeBlockControlV1 =
+    new RelativeThreeBlockControlV1().control(startValue1, len1, startValue2, startValue3, len3, endValue3, curve)
+
+  def twoBlockControl(levels: (Double, Double, Double), times: (Double, Double), curves: (Double, Double)): TwoBlockControl =
+    new TwoBlockControl().control(levels, times, curves)
+
+  def threeBlockControl(levels: (Double, Double, Double, Double), times: (Double, Double, Double), curves: (Double, Double, Double)): ThreeBlockControl =
+    new ThreeBlockControl().control(levels, times, curves)
+
+  def fourBlockControl(levels: (Double, Double, Double, Double, Double), times: (Double, Double, Double, Double), curves: (Double, Double, Double, Double)): FourBlockControl =
+    new FourBlockControl().control(levels, times, curves)
 
   def lineControl(startValue: Double, endValue: Double): LineControl =
     new LineControl().control(startValue, endValue)
@@ -265,12 +274,58 @@ object ModularSynth {
         "peakValue", peakValue)
   }
 
-  class ThreeBlockControl extends ControlInstrument {
+  abstract class BlockControl[LEVELS_T <: Product, TIMES_T <: Product, CURVES_T <: Product] extends ControlInstrument {
+    var levels:LEVELS_T = _
+    var times: TIMES_T = _
+    var curves: CURVES_T = _
+
+    def control(levels: LEVELS_T, times: TIMES_T, curves: CURVES_T): SelfType = {
+      this.levels = levels
+      this.times = times
+      this.curves = curves
+      self()
+    }
+
+    override def graph(parent: Seq[ModularInstrument]): Seq[ModularInstrument] =
+      prependToGraph(parent)
+
+    override def internalBuild(startTime: Double, duration: Double): Seq[Any] =
+      Seq(
+        "levels", levels.productIterator.toSeq.asInstanceOf[Seq[Double]],
+        "times", times.productIterator.toSeq.asInstanceOf[Seq[Double]],
+        "curves", curves.productIterator.toSeq.asInstanceOf[Seq[Double]])
+  }
+
+  class TwoBlockControl extends BlockControl[(Double, Double, Double), (Double, Double), (Double, Double)] {
+    type SelfType = TwoBlockControl
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "twoBlockControl"
+  }
+
+  class ThreeBlockControl extends BlockControl[(Double, Double, Double, Double), (Double, Double, Double), (Double, Double, Double)] {
     type SelfType = ThreeBlockControl
 
     def self(): SelfType = this
 
     val instrumentName: String = "threeBlockControl"
+  }
+
+  class FourBlockControl extends BlockControl[(Double, Double, Double, Double, Double), (Double, Double, Double, Double), (Double, Double, Double, Double)] {
+    type SelfType = FourBlockControl
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "fourBlockControl"
+  }
+
+  class ThreeBlockControlV1 extends ControlInstrument {
+    type SelfType = ThreeBlockControlV1
+
+    def self(): SelfType = this
+
+    val instrumentName: String = "threeBlockControlV1"
 
     var startValue1: Double = _
     var len1: Double = _
@@ -311,12 +366,12 @@ object ModularSynth {
         })
   }
 
-  class RelativeThreeBlockControl extends ControlInstrument {
-    type SelfType = RelativeThreeBlockControl
+  class RelativeThreeBlockControlV1 extends ControlInstrument {
+    type SelfType = RelativeThreeBlockControlV1
 
     def self(): SelfType = this
 
-    val instrumentName: String = "threeBlockControl"
+    val instrumentName: String = "threeBlockControlV1"
 
     var startValue1: Double = _
     var len1: Double = _
